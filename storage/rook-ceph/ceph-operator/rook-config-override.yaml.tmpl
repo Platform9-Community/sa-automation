@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rook-config-override
+data:
+  config: |
+    [global]
+    public network =  ${ceph_public_network}
+    cluster network = ${ceph_cluster_network}
+    public addr = ""
+    cluster addr = ""

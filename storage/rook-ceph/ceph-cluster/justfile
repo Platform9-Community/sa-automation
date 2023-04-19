@@ -1,0 +1,106 @@
+set export
+
+kubeconfig := env_var_or_default("KUBECONFIG", "path_to_a_kubeconfig")
+kube_context := env_var_or_default("KUBE_CONTEXT", "default")
+namespace := "rook-ceph"
+ceph_cluster_name := "rook-ceph"
+chart_name := "rook-ceph-cluster"
+chart_repo := "rook-release"
+chart_version := "v1.11.1"
+snapshotclass_version := "v6.2.1"
+repo_url := "https://charts.rook.io/release"
+monitoring_enabled := "false"
+toolbox_enabled := "true"
+dashboard_enabled := "true"
+dashboard_port := "32443"
+allow_multiple_mon_per_node := "false"
+mon_count := "3"
+disable_crashcollector := "true"
+storageclass_to_test := "ceph-block"
+enable_cephfs_snapshots := "false"
+enable_rbd_snapshots := "false"
+
+_helm_common := '--namespace $namespace --kubeconfig $kubeconfig --kube-context $kube_context'
+
+_helm_args := '$chart_name $chart_repo/$chart_name \
+  --namespace $namespace \
+  --kubeconfig $kubeconfig \
+  --kube-context $kube_context \
+  --version $chart_version \
+  --set "clusterName=$ceph_cluster_name" \
+  --set "cephClusterSpec.mon.allowMultiplePerNode=$allow_multiple_mon_per_node" \
+  --set "cephClusterSpec.mon.count=$mon_count" \
+  --set "cephClusterSpec.dashboard.enabled=$dashboard_enabled" \
+  --set "cephClusterSpec.dashboard.port=$dashboard_port" \
+  --set "monitoring.enabled=$monitoring_enabled" \
+  --set "toolbox.enabled=$toolbox_enabled" \
+  --set "cephClusterSpec.storage.useAllNodes=false" \
+  --set "cephClusterSpec.storage.useAllDevices=false" \
+  --set "cephClusterSpec.crashCollector.disable=$disable_crashcollector" \
+  --set "cephFileSystemVolumeSnapshotClass.enabled=$enable_cephfs_snapshots" \
+  --set "cephBlockPoolsVolumeSnapshotClass.enabled=$enable_rbd_snapshots" \
+  --values network_connections.yaml \
+  --values node_storage.yaml \
+  --values values_overrides.yaml \
+'
+
+_kubectl_common := "--context $kube_context --kubeconfig $kubeconfig"
+
+_bash := "#!/usr/bin/env bash\nset -vuxo pipefail"
+
+_sh := "just --no-highlight _exec_sh"
+
+_default:
+  @just --list --unsorted
+
+_exec_sh *ARGS:
+  @{{_bash}}
+  {{ARGS}}
+
+setup:
+  @{{_sh}} "helm repo add {{chart_repo}} {{repo_url}} && helm repo update"
+
+generate_values:
+  @{{_sh}} "helm show values {{chart_repo}}/{{chart_name}} --version \
+    {{chart_version}} > values.yaml"
+
+search_chart_versions:
+  @{{_sh}} "helm search repo {{chart_name}}"
+
+render_templates:
+  @{{_sh}} "helm template {{_helm_args}} > template.yaml"
+
+create_namespace:
+  @echo "Namespace may already exist, in which case ignore errors"
+  @{{_sh}} "kubectl create ns {{namespace}} {{_kubectl_common}} || true"
+
+install: create_namespace
+  @{{_sh}} "helm install {{_helm_common}} {{_helm_args}}"
+
+upgrade:
+  @{{_sh}} "helm upgrade {{_helm_common}} {{_helm_args}}"
+
+uninstall:
+  @{{_sh}} "kubectl --namespace {{namespace}} {{_kubectl_common}} patch cephcluster rook-ceph \
+    --type merge -p '{\"spec\":{\"cleanupPolicy\":{\"confirmation\":\"yes-really-destroy-data\"}}}'"
+  @{{_sh}} "helm uninstall {{chart_name}} {{_helm_common}} || true"
+  @{{_sh}} "kubectl --namespace {{namespace}} {{_kubectl_common}} delete cephcluster {{ceph_cluster_name}} || true"
+
+list_clusters:
+  @{{_sh}} "helm list --filter {{chart_name}} --all-namespaces --kubeconfig {{kubeconfig}} \
+    --kube-context {{kube_context}}"
+  @{{_sh}} "kubectl {{_kubectl_common}} get pods -l 'app=rook-ceph-operator' -A"
+  @{{_sh}} "kubectl {{_kubectl_common}} get cephcluster -A"
+
+status:
+  @{{_sh}} "kubectl --namespace {{namespace}} {{_kubectl_common}} \
+    exec -it $(kubectl -n {{namespace}} {{_kubectl_common}} get pod -l 'app=rook-ceph-tools' \
+    -o jsonpath='{.items[0].metadata.name}') -- bash -c 'ceph status; ceph osd tree; ceph osd status'"
+
+test:
+  @{{_sh}} "envsubst < test-pvc.yaml | kubectl apply {{_kubectl_common}} -f -"
+  @{{_sh}} "kubectl {{_kubectl_common}} wait -n default --for=condition=ready pod/busybox --timeout=120s"
+  @{{_sh}} "kubectl {{_kubectl_common}} get pvc -l 'app=busyboxtest'"
+
+clean-test:
+  @{{_sh}} "envsubst < test-pvc.yaml | kubectl delete {{_kubectl_common}} --force=true -f -"
