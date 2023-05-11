@@ -1,0 +1,91 @@
+set export
+
+kubeconfig := env_var_or_default("KUBECONFIG", "path_to_a_kubeconfig")
+kube_context := env_var_or_default("KUBE_CONTEXT", "default")
+namespace := "ingress-nginx-1-3-1"
+repo_url := "https://kubernetes.github.io/ingress-nginx"
+chart_name := "ingress-nginx"
+chart_repo := "ingress-nginx"
+chart_version := "4.2.5"
+controller_version := "1.3.1"
+release_name := replace(chart_name,'.','-') + "-" + replace(controller_version,'.','-')
+ext_traffic_policy := "Local"
+replica_count := "2"
+ingress_class_name := release_name
+ingress_class_controller := "k8s.io/" + release_name
+test_ingress_fqdn := "test-ingress.demo"
+
+_helm_common := '--namespace $namespace --kubeconfig $kubeconfig --kube-context $kube_context'
+
+_helm_args := '$release_name $chart_repo/$chart_name \
+  --namespace $namespace \
+  --kubeconfig $kubeconfig \
+  --kube-context $kube_context \
+  --version $chart_version \
+  --set "controller.publishService.pathOverride=$namespace/$release_name-controller" \
+  --set "controller.ingressClassByName=true" \
+  --set "controller.ingressClass=$ingress_class_name" \
+  --set "controller.ingressClassResource.name=$ingress_class_name" \
+  --set "controller.ingressClassResource.controllerValue=$ingress_class_controller" \
+  --set "controller.service.externalTrafficPolicy=$ext_traffic_policy" \
+  --set "controller.replicaCount=$replica_count" \
+  --values values_overrides.yaml \
+'
+
+_kubectl_common := "--context $kube_context --kubeconfig $kubeconfig"
+
+_bash := "#!/usr/bin/env bash\nset -vuxo pipefail"
+
+_sh := "just --no-highlight _exec_sh"
+
+_k := "kubectl"
+
+_default:
+  @just --list --unsorted
+
+_exec_sh *ARGS:
+  @{{_bash}}
+  {{ARGS}}
+
+setup:
+  @{{_sh}} "helm repo add {{chart_repo}} {{repo_url}} && helm repo update"
+
+generate_values:
+  @{{_sh}} "helm show values {{chart_repo}}/{{chart_name}} --version \
+    {{chart_version}} > {{release_name}}-values.yaml"
+
+search_chart_versions:
+  @{{_sh}} "helm search repo -l {{chart_name}}"
+
+render_templates:
+  @{{_sh}} "helm template {{_helm_args}} > {{release_name}}-manifest.yaml"
+
+create_namespace:
+  @echo "Namespace may already exist, in which case ignore errors"
+  @{{_sh}} "kubectl create ns {{namespace}} {{_kubectl_common}} || true"
+
+install: create_namespace
+  @{{_sh}} "helm install {{_helm_args}} {{_helm_common}}"
+
+get_status:
+  @{{_sh}} "helm list --filter {{chart_name}} --all-namespaces --kubeconfig {{kubeconfig}} \
+    --kube-context {{kube_context}}"
+  @{{_sh}} "kubectl --namespace {{namespace}} {{_kubectl_common}} get svc -o wide {{release_name}}-controller" 
+
+upgrade:
+  @{{_sh}} "helm upgrade {{_helm_args}} {{_helm_common}}"
+
+uninstall:
+  @{{_sh}} "helm uninstall {{release_name}} {{_helm_common}} || true"
+  @{{_sh}} "kubectl delete namespace {{namespace}} {{_kubectl_common}} --force=true || true"
+
+test:
+  @{{_sh}} "envsubst < test.yaml | kubectl -n default apply {{_kubectl_common}} -f -"
+  @{{_sh}} "retry=1 ; while [[ \$retry -le 10 ]] ; do \
+    curl -i --connect-timeout 5 http://\$(kubectl -n {{namespace}} {{_kubectl_common}} \
+    get svc {{release_name}}-controller --output jsonpath='{.status.loadBalancer.ingress[0].ip}') --header 'Host: {{test_ingress_fqdn}}'; \
+    ((retry = retry + 1)) ; \
+  done"
+
+clean_test:
+  @{{_sh}} "envsubst < test.yaml | kubectl -n default delete {{_kubectl_common}} -f -"

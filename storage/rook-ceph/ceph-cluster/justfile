@@ -65,7 +65,7 @@ generate_values:
     {{chart_version}} > values.yaml"
 
 search_chart_versions:
-  @{{_sh}} "helm search repo {{chart_name}}"
+  @{{_sh}} "helm search repo -l {{chart_name}}"
 
 render_templates:
   @{{_sh}} "helm template {{_helm_args}} > template.yaml"
@@ -102,5 +102,5 @@ test:
   @{{_sh}} "kubectl {{_kubectl_common}} wait -n default --for=condition=ready pod/busybox --timeout=120s"
   @{{_sh}} "kubectl {{_kubectl_common}} get pvc -l 'app=busyboxtest'"
 
-clean-test:
+clean_test:
   @{{_sh}} "envsubst < test-pvc.yaml | kubectl delete {{_kubectl_common}} --force=true -f -"
