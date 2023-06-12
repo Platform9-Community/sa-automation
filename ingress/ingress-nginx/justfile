@@ -55,7 +55,7 @@ generate_values:
     {{chart_version}} > {{release_name}}-values.yaml"
 
 search_chart_versions:
-  @{{_sh}} "helm search repo -l {{chart_name}}"
+  @{{_sh}} "helm search repo -l {{chart_repo}}"
 
 render_templates:
   @{{_sh}} "helm template {{_helm_args}} > {{release_name}}-manifest.yaml"

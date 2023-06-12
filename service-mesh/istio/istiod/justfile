@@ -35,6 +35,7 @@ search_chart_versions:
   @{{_sh}} "helm search repo -l {{chart_repo}}/{{chart_name}}"
 
 generate_values:
+  @{{_sh}} "if [[ -f values_{{version_safe}}.yaml ]]; then cp values_{{version_safe}}.yaml values_{{version_safe}}.yaml.$(date '+%Y%m%d_%s'); fi"
   @{{_sh}} "helm show values {{chart_repo}}/{{chart_name}} --version \
     {{chart_version}} > values_{{version_safe}}.yaml"
 
@@ -52,3 +53,4 @@ list:
   @{{_sh}} "helm list --filter {{release_name}} --all-namespaces --kubeconfig {{kubeconfig}} \
     --kube-context {{kube_context}}"
   @{{_sh}} "kubectl {{_kubectl_common}} get pods -o wide --namespace {{namespace}}"
+
