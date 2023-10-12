@@ -24,7 +24,7 @@ spec:
   volumes:
     - name: ceph-rbd-volume
       persistentVolumeClaim:
-        claimName: buxyboxpvc1
+        claimName: busyboxpvc1
   containers:
     - image: busybox
       name: busybox

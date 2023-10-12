@@ -2,6 +2,8 @@ set export
 
 kubeconfig := env_var_or_default("KUBECONFIG", "path_to_a_kubeconfig")
 kube_context := env_var_or_default("KUBE_CONTEXT", "default")
+
+# Customize any of the below
 namespace := "rook-ceph"
 ceph_cluster_name := "rook-ceph"
 chart_name := "rook-ceph-cluster"
@@ -20,6 +22,7 @@ disable_crashcollector := "true"
 storageclass_to_test := "ceph-block"
 enable_cephfs_snapshots := "false"
 enable_rbd_snapshots := "false"
+# end customizations
 
 _helm_common := '--namespace $namespace --kubeconfig $kubeconfig --kube-context $kube_context'
 
@@ -103,7 +106,8 @@ clean_test:
   @{{_sh}} "envsubst < test-pvc.yaml | kubectl delete {{_kubectl_common}} --force=true -f -"
 
 ceph_collect:
-  @{{_sh}} "kubectl {{_kubectl_common}} exec -it $(kubectl {{_kubectl_common}} get pod -l app=rook-ceph-tools -o jsonpath='{.items[0].metadata.name}' -n {{namespace}} ) -n {{namespace}} -- bash -c 'curl -SL https://raw.githubusercontent.com/42on/ceph-collect/master/ceph-collect|python3'"
-
-test_cp:
-  @{{_sh}} "echo \"Copy locally:  kubectl {{_kubectl_common}} cp {{namespace}}/$(kubectl {{_kubectl_common}} get pod -l app=rook-ceph-tools -o jsonpath={'.items[0].metadata.name}' -n {{namespace}}):/tmp/FILENAME.tar.gz /tmp/FILENAME.tar.gz\""
+  @{{_sh}} "kubectl {{_kubectl_common}} exec -it $(kubectl {{_kubectl_common}} get pod -l app=rook-ceph-tools -o jsonpath={'.items[0].metadata.name}' -n {{namespace}} ) -n {{namespace}} -- sh -c 'rm -f /tmp/ceph-collect_*.tar.gz'"
+  @{{_sh}} "kubectl {{_kubectl_common}} exec -it $(kubectl {{_kubectl_common}} get pod -l app=rook-ceph-tools -o jsonpath='{.items[0].metadata.name}' -n {{namespace}} ) -n {{namespace}} -- sh -c 'curl -SL https://raw.githubusercontent.com/42on/ceph-collect/master/ceph-collect|python3'"
+  @{{_sh}} "kubectl {{_kubectl_common}} exec -it $(kubectl {{_kubectl_common}} get pod -l app=rook-ceph-tools -o jsonpath={'.items[0].metadata.name}' -n {{namespace}} ) -n {{namespace}} -- sh -c 'mv /tmp/ceph-collect_*.tar.gz /tmp/ceph-collect.tar.gz'"
+  @{{_sh}} "kubectl {{_kubectl_common}} cp {{namespace}}/$(kubectl {{_kubectl_common}} get pod -l app=rook-ceph-tools -o jsonpath={'.items[0].metadata.name}' -n {{namespace}}):/tmp/ceph-collect.tar.gz /tmp/ceph-collect.tar.gz"
+  @{{_sh}} "echo \"Copied to /tmp/ceph-collect.tar.gz locally\""

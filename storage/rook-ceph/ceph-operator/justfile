@@ -2,6 +2,8 @@ set export
 
 kubeconfig := env_var_or_default("KUBECONFIG", "path_to_a_kubeconfig")
 kube_context := env_var_or_default("KUBE_CONTEXT", "default")
+
+# Customize any of the below
 namespace := "rook-ceph"
 log_level := "INFO"
 ceph_cluster_name := "rook-ceph"
@@ -14,10 +16,12 @@ monitoring_enabled := "false"
 rbd_enabled := "true"
 cephfs_enabled := "true"
 crds_enabled := "true"
-# below 3 lines are only for multi homed cluster
+# below lines are only required for multi homed cluster
+# https://github.com/rook/rook/blob/master/Documentation/CRDs/Cluster/ceph-cluster-crd.md#ceph-public-and-cluster-networks
 multi_homed_networks := "false"
 ceph_public_network := "10.10.10.0/24"
 ceph_cluster_network := "10.10.20.0/24"
+# end customizations
 
 _helm_common := '--namespace $namespace --kubeconfig $kubeconfig --kube-context $kube_context'
 
@@ -70,6 +74,18 @@ apply_labels:
     kubectl label {{_kubectl_common}} nodes \$worker role=ceph-storage-node --overwrite=true || true ; \
   done"
 
+remove_labels:
+  @{{_sh}} "for master in $(kubectl get nodes --selector=node-role.kubernetes.io/master \
+    {{_kubectl_common}} -o jsonpath='{$.items[*].metadata.name}') ; \
+    do echo \$master ; \
+    kubectl label {{_kubectl_common}} nodes \$master role- --overwrite=true || true ; \
+  done"
+  @{{_sh}} "for worker in $(kubectl get nodes --selector=node-role.kubernetes.io/worker \
+    {{_kubectl_common}} -o jsonpath='{$.items[*].metadata.name}') ; \
+    do echo \$worker ; \
+    kubectl label {{_kubectl_common}} nodes \$worker role- --overwrite=true || true ; \
+  done"
+
 create_configmap:
   @{{_sh}} "if [[ \"$multi_homed_networks\" == \"true\" ]]; then \
     envsubst < rook-config-override.yaml.tmpl | kubectl apply \
@@ -92,7 +108,7 @@ install: create_namespace apply_labels create_configmap
 upgrade:
   @{{_sh}} "helm upgrade {{_helm_args}} {{_helm_common}}"
 
-uninstall:
+uninstall: remove_labels
   @{{_sh}} "helm uninstall {{chart_name}} {{_helm_common}} || true"
   @{{_sh}} "kubectl delete namespace {{namespace}} {{_kubectl_common}} --force=true || true"
 
