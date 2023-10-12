@@ -18,7 +18,7 @@ other utilities.
 root@jmiller-calicopmk-follower-1:~#
 ```
 
-1. KUBECONFIG
+2. KUBECONFIG
 
 Export your KUBECONFIG environment variable to point to the path of the kubeconfig file to be used for install rook-ceph into the appropriate cluster.
 
@@ -38,7 +38,7 @@ cd ceph-operator
 just setup
 ```
 
-1. Configuration
+2. Configuration
 
 Make any configuration changes as needed by editing the `ceph-operator/justfile' section:
 
@@ -63,7 +63,7 @@ ceph_cluster_network := "10.10.20.0/24"
 # end customizations
 ```
 
-1. Deploy the operator
+3. Deploy the operator
 
 Install the operator with the following commands
 
@@ -129,7 +129,7 @@ NAME                                  READY   STATUS    RESTARTS   AGE
 rook-ceph-operator-74f44888f4-5cpsv   1/1     Running   0          3m50s
 ```
 
-1. Deploy a rook-ceph cluster
+4. Deploy a rook-ceph cluster
 
 Run the following command to set up the required helm components locally on your workstation
 
@@ -138,7 +138,7 @@ cd ceph-cluster
 just setup
 ```
 
-1. Configuration
+5. Configuration
 
 Make any configuration changes as needed by editing the `ceph-operator/justfile' section:
 
@@ -190,8 +190,7 @@ cephClusterSpec:
           - name: "vdb"
 ```
 
-1. Deploy the cluster CRD via helm
-
+6. Deploy the cluster CRD via helm
 
 Run the following command
 
