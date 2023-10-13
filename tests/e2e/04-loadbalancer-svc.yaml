@@ -1,0 +1,23 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  - command: kubectl create deployment nginx-kuttl --image nginx --replicas=3
+  - command: kubectl wait --for=condition=Available deploy/nginx-kuttl --timeout=120s
+    timeout: 120
+  - command: kubectl expose deployment nginx-kuttl --type=LoadBalancer --port=80
+  - script: |
+      kubectl run curl-client --image=quay.io/curl/curl:latest --rm -i --tty --restart=Never -- \
+        sh -c "for i in 1 2 3 4 5; do curl --location --fail-with-body --silent --connect-timeout 20 \
+               http://nginx-kuttl | grep 'Welcome to nginx'; done"
+  - script: |
+      LB_IP=$(kubectl get svc nginx-kuttl -o jsonpath="{.status.loadBalancer.ingress[0].ip}" || exit)
+      echo "$LB_IP" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" || {
+        echo 'ERROR: LoadBalancer service has no IP set!'; exit 1
+      }
+delete:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-kuttl
+  - apiVersion: v1
+    kind: Service
+    name: nginx-kuttl

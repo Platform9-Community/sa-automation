@@ -1,0 +1,8 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  - script: |
+      NODES_STATUS=$(kubectl get nodes --no-headers || exit)
+      NOT_READY=$( ! echo "$NODES_STATUS" | grep -v ' Ready ' ) || {
+        echo 'ERROR: Not all nodes are in Ready state!'; echo "$NOT_READY" ; exit 1
+      }
