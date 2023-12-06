@@ -1,0 +1,56 @@
+namespace: nsc-system
+
+checker:
+  debug: false
+  nodeCheckScriptPath: /a/path/to/script.sh
+  scriptPeriodSec: 5
+  failureThreshold: 4
+  cordonNodeOnFailure: true
+  drainNodeOnFailure: true
+  taintNodeOnFailure: true
+  nodeTaint:
+    key: "nodeServiceCheckFailed"
+    value: "true"
+    effect: "NoSchedule"
+
+image:
+  repository: bitnami/kubectl
+  pullPolicy: IfNotPresent
+  tag: "1.27.8"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+
+hostNetwork: false
+hostPID: false
+terminationGracePeriodSeconds: "30"
+
+podAnnotations: {}
+
+podSecurityContext:
+  privileged: true
+
+securityContext:
+  privileged: true
+
+priorityClassName: "system-node-critical"
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+  # disk: ssd
+
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
