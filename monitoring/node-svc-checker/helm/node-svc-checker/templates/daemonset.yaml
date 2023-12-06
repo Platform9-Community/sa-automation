@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "node-svc-checker.name" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "node-svc-checker.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "node-svc-checker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "node-svc-checker.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "node-svc-checker.serviceAccountName" . }}
+      hostNetwork: {{ .Values.hostNetwork }}
+      hostPID: {{ .Values.hostPID }}
+      priorityClassName: "{{ .Values.priorityClassName }}"
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command:
+            - /bin/bash
+          args:
+            - -c
+            - /nsc/run.sh
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: CHECKER_PERIOD
+              value: "{{ .Values.checker.scriptPeriodSec }}"
+            - name: CHECKER_THRESHOLD
+              value: "{{ .Values.checker.failureThreshold }}"
+            - name: CHECKER_CMD
+              value: "{{ .Values.checker.nodeCheckScriptPath }}"
+            - name: CHECKER_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CHECKER_CORDON_NODE
+              value: "{{ .Values.checker.cordonNodeOnFailure }}"
+            - name: CHECKER_DRAIN_NODE
+              value: "{{ .Values.checker.drainNodeOnFailure }}"
+            - name: CHECKER_TAINT_NODE
+              value: "{{ .Values.checker.taintNodeOnFailure }}"
+            - name: CHECKER_TAINT_KEY
+              value: "{{ .Values.checker.nodeTaint.key }}"
+            - name: CHECKER_TAINT_VALUE
+              value: "{{ .Values.checker.nodeTaint.value }}"
+            - name: CHECKER_TAINT_EFFECT
+              value: "{{ .Values.checker.nodeTaint.effect }}"
+            - name: CHECKER_DEBUG
+              value: "{{ .Values.checker.debug }}"
+          volumeMounts:
+            - name: wrapper-script
+              mountPath: /nsc
+            - name: target-script
+              mountPath: {{ dir .Values.checker.nodeCheckScriptPath }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: wrapper-script
+        secret:
+          secretName: {{ include "node-svc-checker.name" . }}
+          defaultMode: 0755
+      - name: target-script
+        hostPath:
+          path: {{ dir .Values.checker.nodeCheckScriptPath }}

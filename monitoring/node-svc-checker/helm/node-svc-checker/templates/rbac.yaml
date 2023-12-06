@@ -1,0 +1,37 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "node-svc-checker.serviceAccountName" . }}
+  labels:
+    {{- include "node-svc-checker.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods/eviction"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["statefulsets", "daemonsets", "replicasets"]
+    verbs: ["get", "list"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "node-svc-checker.serviceAccountName" . }}
+  labels:
+    {{- include "node-svc-checker.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "node-svc-checker.serviceAccountName" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "node-svc-checker.serviceAccountName" . }}
+    namespace: {{ .Values.namespace }}
