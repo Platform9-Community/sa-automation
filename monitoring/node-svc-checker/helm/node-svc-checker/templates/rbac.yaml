@@ -15,7 +15,7 @@ rules:
     resources: ["nodes"]
     verbs: ["get", "patch"]
   - apiGroups: ["apps"]
-    resources: ["statefulsets", "daemonsets", "replicasets"]
+    resources: ["statefulsets", "daemonsets", "replicasets", "deployments"]
     verbs: ["get", "list"]
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
