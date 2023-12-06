@@ -128,3 +128,54 @@ just uninstall
 ```
 just upgrade
 ```
+
+## Troubleshooting
+
+Descriptive logs can be viewed via `kubectl logs -f <POD>`
+If more logging is necessary, redeploy with `checker.debug=true`
+
+```
+[✅OK] return code was zero.
+INFO: Running /tmp/foo.sh
+[✅OK] return code was zero.
+INFO: Running /tmp/foo.sh
+[💥FAIL] non-zero return code. Noticed 1 times. (threshold is 4)
+INFO: Running /tmp/foo.sh
+[💥FAIL] non-zero return code. Noticed 2 times. (threshold is 4)
+INFO: Running /tmp/foo.sh
+[💥FAIL] non-zero return code. Noticed 3 times. (threshold is 4)
+INFO: Running /tmp/foo.sh
+[💥FAIL] non-zero return code. Noticed 4 times. (threshold is 4)
+⚠ WARN: Detected the monitored service is down!
+⚠ WARN: Cordoning node 172.29.21.117
+node/172.29.21.117 cordoned
+⚠ WARN: Draining node 172.29.21.117 and adding annotation [node-svc-checker-drain-state=drainActive]
+node/172.29.21.117 already cordoned
+```
+
+Once cordoning of the node has taking place you will see something similar to:
+```
+$ kubectl get nodes
+NAME            STATUS                     ROLES    AGE    VERSION
+172.29.20.156   Ready                      master   211d   v1.26.8
+172.29.20.218   Ready                      worker   211d   v1.26.8
+172.29.20.47    Ready                      worker   3d1h   v1.26.8
+172.29.21.117   Ready,SchedulingDisabled   worker   3d1h   v1.26.8
+172.29.21.130   Ready                      master   211d   v1.26.8
+172.29.21.188   Ready                      master   211d   v1.26.8
+```
+
+The `Ready` status above on the `172.29.21.117` node is unavoidable and a result of Kubelet being healthy on the node.
+
+When the node has been tainted, cordoned and drained, you will see node taints such as:
+```
+Taints:
+  node.kubernetes.io/unschedulable:NoSchedule
+  nodeServiceCheckFailed=true:NoSchedule
+```
+
+Whether or not the node has been drained is stored as an annotation:
+
+```
+node-svc-checker-drain-state: drainActive
+```

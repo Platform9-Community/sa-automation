@@ -19,7 +19,7 @@ DRAIN_ACTIVE_VALUE="drainActive"
 DRAIN_NOT_ACTIVE_VALUE="drainNotActive"
 
 abort() {
-  echo "Aborting due to fatal exeception"
+  echo "Aborting due to fatal exception"
   kill -s TERM $$
   exit 1
 }
@@ -66,7 +66,7 @@ onFailure() {
     if [ "$CHECKER_DRAIN_NODE" == "true" ]; then
       if [ "$(isNodeDrained)" == "false" ]; then
         echo "⚠ WARN: Draining node $CHECKER_NODE_NAME and adding annotation [$DRAIN_ANNOTATION_KEY=$DRAIN_ACTIVE_VALUE]"
-        kubectl drain "$CHECKER_NODE_NAME" --ignore-daemonsets=true || abort
+        kubectl drain "$CHECKER_NODE_NAME" --ignore-daemonsets=true --delete-emptydir-data || abort
         kubectl annotate --overwrite=true node "$CHECKER_NODE_NAME" "$DRAIN_ANNOTATION_KEY=$DRAIN_ACTIVE_VALUE"
       fi
     fi
