@@ -7,16 +7,16 @@ to take Scheduling action(s) if that component is deemed unhealthy.
 
 The architecture is as follows.
 
-Node Monitor Script
+⚙ Node Monitor Script
  * executable that exists on nodes to be monitored
- * uses whatever internal logic is necessary to monitor any arbitray components of the node
+ * uses whatever internal logic is necessary to monitor any arbitrary components of the node
  * will exit with exit code of zero when said component(s) are healthy
- * will exit with non-zero exit code when not healhty
+ * will exit with non-zero exit code when not healthy
  * any output to stderr is assumed to be an internal failure of the monitoring logic and considered fatal, causing the overall monitoring actions to exit 1 (CrashLoopBackOff)
 
-Daemonset
+⚙ Daemonset
  * runs on all or select nodes via nodeSelector label
- * exectutes a wrapper control process which continually invokes the Node Monitor Script above
+ * executes a wrapper control process which continually invokes the Node Monitor Script above
  * invocation frequency of the monitor script can be customized
  * when failures are detected, a customizable failure threshold exists to avoid taking action on "flapping" conditions
  * will optionally cordon a node once the failure threshold is exceeded
@@ -24,8 +24,7 @@ Daemonset
  * will optionally taint a node once the failure threshold is exceeded
  * will undo all 3 of the above actions when the failure clears
 
-
-Helm Chart
+⚙ Helm Chart
  * handles delivery and lifecycle management of manifests to PMK cluster(s)
 
 ## Prerequisites
@@ -53,7 +52,7 @@ Export your `KUBECONFIG` environment variable to point to the path of the target
 export KUBECONFIG=/some/file.yaml
 ```
 
-## Instalation
+## Installation
 
 Since you will use helm to deploy to the cluster, you first need to make any customizations to the values of the chart.
 
@@ -153,7 +152,7 @@ node/172.29.21.117 cordoned
 node/172.29.21.117 already cordoned
 ```
 
-Once cordoning of the node has taking place you will see something similar to:
+Once cordoning of the node has taken place, you will see something similar to:
 ```
 $ kubectl get nodes
 NAME            STATUS                     ROLES    AGE    VERSION
