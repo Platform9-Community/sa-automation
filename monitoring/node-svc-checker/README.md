@@ -178,3 +178,22 @@ Whether or not the node has been drained is stored as an annotation:
 ```
 node-svc-checker-drain-state: drainActive
 ```
+
+When the failure clears, you should see this in the logs:
+```
+INFO: Running /tmp/foo.sh
+[💥FAIL] non-zero return code. Noticed 347 times. (threshold is 4)
+⚠ WARN: Detected the monitored service is down!
+INFO: Running /tmp/foo.sh
+[✅OK] return code was zero.
+INFO: Uncordoning node 172.29.21.117
+node/172.29.21.117 uncordoned
+INFO: Adding annotation [node-svc-checker-drain-state=drainNotActive] to node 172.29.21.117
+node/172.29.21.117 annotate
+INFO: Removing taint from node 172.29.21.117
+node/172.29.21.117 untainted
+INFO: Running /tmp/foo.sh
+[✅OK] return code was zero.
+INFO: Uncordoning node 172.29.21.117
+node/172.29.21.117 uncordoned
+```
