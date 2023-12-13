@@ -37,39 +37,21 @@ spec:
             - /bin/bash
           args:
             - -c
-            - /nsc/run.sh
+            - /nsc/run.sh /nsc/etc/settings.rc
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
-            - name: CHECKER_PERIOD
-              value: "{{ .Values.checker.scriptPeriodSec }}"
-            - name: CHECKER_THRESHOLD
-              value: "{{ .Values.checker.failureThreshold }}"
-            - name: CHECKER_CMD
-              value: "{{ .Values.checker.nodeCheckScriptPath }}"
             - name: CHECKER_NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: CHECKER_CORDON_NODE
-              value: "{{ .Values.checker.cordonNodeOnFailure }}"
-            - name: CHECKER_DRAIN_NODE
-              value: "{{ .Values.checker.drainNodeOnFailure }}"
-            - name: CHECKER_TAINT_NODE
-              value: "{{ .Values.checker.taintNodeOnFailure }}"
-            - name: CHECKER_TAINT_KEY
-              value: "{{ .Values.checker.nodeTaint.key }}"
-            - name: CHECKER_TAINT_VALUE
-              value: "{{ .Values.checker.nodeTaint.value }}"
-            - name: CHECKER_TAINT_EFFECT
-              value: "{{ .Values.checker.nodeTaint.effect }}"
-            - name: CHECKER_DEBUG
-              value: "{{ .Values.checker.debug }}"
           volumeMounts:
             - name: wrapper-script
               mountPath: /nsc
             - name: target-script
               mountPath: {{ dir .Values.checker.nodeCheckScriptPath }}
+            - name: settings-rc
+              mountPath: /nsc/etc
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -86,3 +68,6 @@ spec:
       - name: target-script
         hostPath:
           path: {{ dir .Values.checker.nodeCheckScriptPath }}
+      - name: settings-rc
+        configMap:
+          name: {{ include "node-svc-checker.name" . }}

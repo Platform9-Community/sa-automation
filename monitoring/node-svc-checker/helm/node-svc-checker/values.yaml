@@ -1,13 +1,18 @@
 namespace: nsc-system
 
 checker:
+  enabled: true
   debug: false
   nodeCheckScriptPath: /a/path/to/script.sh
+  nodeCheckScriptArgs: "-c checkLicense"
   scriptPeriodSec: 5
   failureThreshold: 4
   cordonNodeOnFailure: true
   drainNodeOnFailure: true
   taintNodeOnFailure: true
+  okReturnCodes:
+    - 0
+    - 127
   nodeTaint:
     key: "nodeServiceCheckFailed"
     value: "true"
@@ -40,13 +45,13 @@ securityContext:
 
 priorityClassName: "system-node-critical"
 
-resources: {}
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 16Mi
 
 nodeSelector: {}
   # disk: ssd

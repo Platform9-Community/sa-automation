@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "node-svc-checker.name" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "node-svc-checker.labels" . | nindent 4 }}
+data:
+  settings.rc: |-
+        CHECKER_ENABLED="{{ .Values.checker.enabled }}"
+        CHECKER_DEBUG="{{ .Values.checker.debug }}"
+        CHECKER_CMD="{{ .Values.checker.nodeCheckScriptPath }}"
+        CHECKER_ARGS="{{ .Values.checker.nodeCheckScriptArgs }}"
+        CHECKER_PERIOD="{{ .Values.checker.scriptPeriodSec }}"
+        CHECKER_THRESHOLD="{{ .Values.checker.failureThreshold }}"
+        CHECKER_NODE_NAME="${CHECKER_NODE_NAME:?Node name not known!}"
+        CHECKER_CORDON_NODE="{{ .Values.checker.cordonNodeOnFailure }}"
+        CHECKER_DRAIN_NODE="{{ .Values.checker.drainNodeOnFailure }}"
+        CHECKER_TAINT_NODE="{{ .Values.checker.taintNodeOnFailure }}"
+        CHECKER_TAINT_KEY="{{ .Values.checker.nodeTaint.key }}"
+        CHECKER_TAINT_VALUE="{{ .Values.checker.nodeTaint.value }}"
+        CHECKER_TAINT_EFFECT="{{ .Values.checker.nodeTaint.effect }}"
+        CHECKER_OK_RETURN_CODES_CSV="{{ .Values.checker.okReturnCodes | join "," }}"
+        CHECKER_DRAIN_ANNOTATION_KEY="node-svc-checker-drain-state"
+        CHECKER_DRAIN_ACTIVE_VALUE="drainActive"
+        CHECKER_DRAIN_NOT_ACTIVE_VALUE="drainNotActive"
+        CHECKER_JSON_OUTPUT="/tmp/node.json"
+        IFS=',' read -r -a CHECKER_OK_RETURN_CODES_ARRAY <<< "$CHECKER_OK_RETURN_CODES_CSV"
