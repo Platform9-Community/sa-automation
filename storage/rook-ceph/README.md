@@ -69,7 +69,9 @@ Install the operator with the following commands
 
 ```
 cd ceph-operator
+just generate_values
 just install
+just list
 ```
 
 The output will look similar to:
@@ -195,7 +197,9 @@ cephClusterSpec:
 Run the following command
 
 ```
+just generate_values
 just install
+just list_clusters
 ```
 
 The output will look similar to:
@@ -286,7 +290,7 @@ ID  HOST            USED  AVAIL  WR OPS  WR DATA  RD OPS  RD DATA  STATE
  2  172.29.20.47   78.8M  19.9G      0        0       0        0   exists,up
  ```
 
- Test creation of a PVC using the ceph-block (rbd) storage class:
+ Once the cluster is up and healthy you can test creation of a PVC using the ceph-block (rbd) storage class:
 
  ```
  $ just test
