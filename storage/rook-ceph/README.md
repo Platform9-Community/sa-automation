@@ -142,7 +142,9 @@ just setup
 
 5. Configuration
 
-Make any configuration changes as needed by editing the `ceph-operator/justfile' section:
+Make any configuration changes as needed by editing the `ceph-cluster/justfile' section:
+
+Note: The namespace should be the same as that of the ceph-operator
 
 ```
 # Customize any of the below

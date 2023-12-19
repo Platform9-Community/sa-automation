@@ -6,9 +6,10 @@ metadata:
   name: busyboxpvc1
   namespace: default
 spec:
-  storageClassName: ${storage_class_to_test}
+  storageClassName: ${storageclass_to_test}
+  volumeMode: Block
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 500Mi
