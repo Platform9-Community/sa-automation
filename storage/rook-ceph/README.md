@@ -302,8 +302,8 @@ pod/busyboxtest created
 kubectl --context default --kubeconfig /home/jmiller/Downloads/calico-rspc.yaml wait -n default --for=condition=ready pod/busyboxtest --timeout=120s
 pod/busyboxtest condition met
 kubectl --context default --kubeconfig /home/jmiller/Downloads/calico-rspc.yaml get pvc -l 'app=busyboxtest'
-NAME          STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-busyboxpvc1   Bound    pvc-613ecec4-9ddc-48bb-af60-a6b6d74d10e3   500Mi      RWO            ceph-block     7s
+NAME          STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS        AGE
+busyboxpvc1   Bound    pvc-613ecec4-9ddc-48bb-af60-a6b6d74d10e3   500Mi      RWX            ceph-filesystem     7s
 ```
 
 Clean up the POD and PVC

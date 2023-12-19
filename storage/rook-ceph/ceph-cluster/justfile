@@ -19,7 +19,7 @@ dashboard_port := "32443"
 allow_multiple_mon_per_node := "false"
 mon_count := "3"
 disable_crashcollector := "true"
-storageclass_to_test := "ceph-block"
+storageclass_to_test := "ceph-filesystem"
 enable_cephfs_snapshots := "false"
 enable_rbd_snapshots := "false"
 # end customizations
@@ -29,6 +29,7 @@ _helm_common := '--namespace $namespace --kubeconfig $kubeconfig --kube-context 
 _helm_args := '$chart_name $chart_repo/$chart_name \
   --version $chart_version \
   --set "clusterName=$ceph_cluster_name" \
+  --set "operatorNamespace=$namespace" \
   --set "cephClusterSpec.mon.allowMultiplePerNode=$allow_multiple_mon_per_node" \
   --set "cephClusterSpec.mon.count=$mon_count" \
   --set "cephClusterSpec.dashboard.enabled=$dashboard_enabled" \
