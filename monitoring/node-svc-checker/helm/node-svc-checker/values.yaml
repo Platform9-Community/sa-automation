@@ -3,13 +3,14 @@ namespace: nsc-system
 checker:
   enabled: true
   debug: false
-  nodeCheckScriptPath: /a/path/to/script.sh
+  nodeCheckScriptPath: "/tmp/foo.sh"
   nodeCheckScriptArgs: "-c checkLicense"
   scriptPeriodSec: 5
   failureThreshold: 4
   cordonNodeOnFailure: true
   drainNodeOnFailure: true
   taintNodeOnFailure: true
+  prometheusScrapeInterval: "60s"
   okReturnCodes:
     - 0
     - 127
@@ -22,6 +23,12 @@ image:
   repository: bitnami/kubectl
   pullPolicy: IfNotPresent
   tag: "1.27.8"
+
+busybox:
+  repository: busybox
+  pullPolicy: IfNotPresent
+  tag: "1.35"
+  port: 8080
 
 imagePullSecrets: []
 nameOverride: ""

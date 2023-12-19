@@ -16,6 +16,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
+        prometheus-monitor: "true"
         {{- include "node-svc-checker.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
@@ -28,6 +29,22 @@ spec:
       priorityClassName: "{{ .Values.priorityClassName }}"
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       containers:
+        - name: metrics
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.busybox.repository }}:{{ .Values.busybox.tag }}"
+          command: ["/bin/sh"]
+          args:
+            - -c
+            - echo -e "H:/srv/\\nI:index.txt" > /etc/httpd.conf ; httpd -fv -p $HTTPD_LISTEN_PORT -c /etc/httpd.conf
+          env:
+            - name: HTTPD_LISTEN_PORT
+              value: "{{ .Values.busybox.port }}"
+          ports:
+            - name: metrics-http
+              containerPort: {{ .Values.busybox.port }}
+          volumeMounts:
+            - name: metrics-shared-data
+              mountPath: /srv/metrics
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
@@ -46,6 +63,8 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           volumeMounts:
+            - name: metrics-shared-data
+              mountPath: /metrics
             - name: wrapper-script
               mountPath: /nsc
             - name: target-script
@@ -61,6 +80,8 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+      - name: metrics-shared-data
+        emptyDir: {}
       - name: wrapper-script
         secret:
           secretName: {{ include "node-svc-checker.name" . }}

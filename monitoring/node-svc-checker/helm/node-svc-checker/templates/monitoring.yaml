@@ -1,0 +1,85 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ include "node-svc-checker.name" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    prometheus: system
+    {{- include "node-svc-checker.labels" . | nindent 4 }}
+    role: service-monitor
+spec:
+  ports:
+  - name: metrics-http
+    port: {{ .Values.busybox.port }}
+  selector:
+    {{- include "node-svc-checker.selectorLabels" . | nindent 4 }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "node-svc-checker.name" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    prometheus: system
+    role: service-monitor
+    {{- include "node-svc-checker.labels" . | nindent 4 }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.namespace }}
+  endpoints:
+    - port: metrics-http
+      path: /metrics/
+      interval: {{ .Values.checker.prometheusScrapeInterval }}
+      scheme: http
+      relabelings:
+        - action: replace
+          regex: (.*)
+          replacement: $1
+          targetLabel: instance
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+  selector:
+    matchLabels:
+      {{- include "node-svc-checker.selectorLabels" . | nindent 6 }}
+---
+kind: PrometheusRule
+apiVersion: monitoring.coreos.com/v1
+metadata:
+  labels:
+    {{- include "node-svc-checker.labels" . | nindent 4 }}
+    prometheus: system
+    role: alert-rules
+  name: {{ include "node-svc-checker.name" . }}
+  namespace: kubevirt
+spec:
+  groups:
+  - name: nodesvcchecker.rules
+    rules:
+    - expr: sum(up{pod=~'node-svc-checker-.*'}) or vector(0)
+      record: node_svc_checker_up_total
+    - alert: NodeSvcCheckerDown
+      annotations:
+        summary: All Node Service Checker PODs are down.
+      expr: node_svc_checker_up_total == 0
+      for: 1m
+      labels:
+        severity: warning
+    - alert: NodeSvcCheckerSvcStateUnknown
+      annotations:
+        summary: Node Service Checker monitored service state is Unknown.
+        description:  "node_svc_checker_check_status  VALUE = {{ "{{" }} $value {{ "}}" }}"
+      expr: node_svc_checker_check_status == 127
+      for: 1m
+      labels:
+        severity: warning
+        script: {{ regexReplaceAll "\\W+" .Values.checker.nodeCheckScriptPath "_" }}
+    - alert: NodeSvcCheckerSvcStateDown
+      annotations:
+        summary: Node Service Checker monitored service state is Down.
+        description:  "node_svc_checker_check_status  VALUE = {{ "{{" }} $value {{ "}}" }}"
+      expr: node_svc_checker_check_status == 1
+      for: 1m
+      labels:
+        severity: error
+        script: {{ regexReplaceAll "\\W+" .Values.checker.nodeCheckScriptPath "_" }}

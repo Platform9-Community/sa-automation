@@ -21,8 +21,4 @@ data:
         CHECKER_TAINT_VALUE="{{ .Values.checker.nodeTaint.value }}"
         CHECKER_TAINT_EFFECT="{{ .Values.checker.nodeTaint.effect }}"
         CHECKER_OK_RETURN_CODES_CSV="{{ .Values.checker.okReturnCodes | join "," }}"
-        CHECKER_DRAIN_ANNOTATION_KEY="node-svc-checker-drain-state"
-        CHECKER_DRAIN_ACTIVE_VALUE="drainActive"
-        CHECKER_DRAIN_NOT_ACTIVE_VALUE="drainNotActive"
-        CHECKER_JSON_OUTPUT="/tmp/node.json"
         IFS=',' read -r -a CHECKER_OK_RETURN_CODES_ARRAY <<< "$CHECKER_OK_RETURN_CODES_CSV"
