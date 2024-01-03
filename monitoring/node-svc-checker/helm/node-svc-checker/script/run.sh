@@ -2,12 +2,15 @@
 
 set -o pipefail
 
-NODE_IS_DRAINED=false
-NODE_IS_CORDONED=false
-NODE_IS_TAINTED=false
-PROM_STATUS=127 # 0 == good, 1 == failed, 127 == unknown
-PROM_METRIC_DIR="/metrics"
-PROM_STATUS_FILE="$PROM_METRIC_DIR/index.txt"
+CHECKER_NODE_IS_DRAINED=false
+CHECKER_NODE_IS_CORDONED=false
+CHECKER_NODE_IS_TAINTED=false
+CHECKER_PROM_STATUS=127 # 0 == good, 1 == failed, 127 == unknown
+CHECKER_PROM_METRICS_DIR="/metrics"
+CHECKER_PROM_STATUS_FILE="$CHECKER_PROM_METRICS_DIR/index.txt"
+CHECKER_JSON_OUTPUT="/tmp/node.json"
+MINWAIT=4
+MAXWAIT=30
 
 logdate() {
   date "+%y/%m/%d %H:%M:%S"
@@ -51,56 +54,101 @@ abort() {
   exit 1
 }
 
+saveNodeJson() {
+  info "Querying K8s API for node status"
+  kubectl get nodes "$CHECKER_NODE_NAME" -o json > "$CHECKER_JSON_OUTPUT" || abort
+}
+
+readNodeJson() {
+  if ! [ -s "$CHECKER_JSON_OUTPUT" ]; then
+    err "zero size file: $CHECKER_JSON_OUTPUT"
+    abort
+  fi
+  cat "$CHECKER_JSON_OUTPUT"
+}
+
+taintIsApplied() {
+  local count
+  count=$(readNodeJson | grep -c "key\": \"$1")
+  if [[ $count -gt 0 ]]; then
+    true
+  else
+    false
+  fi
+}
+
+nodeIsCordoned() {
+  taintIsApplied "node.kubernetes.io/unschedulable"
+}
+
+refreshStatus() {
+  saveNodeJson
+  if nodeIsCordoned; then
+    CHECKER_NODE_IS_CORDONED=true
+  fi
+  if [ "$CHECKER_TAINT_KEY" != "" ]; then
+    if taintIsApplied "$CHECKER_TAINT_KEY"; then
+      CHECKER_NODE_IS_TAINTED=true
+    fi
+  fi
+}
+
 savePromStatus() {
-  info "Saving status: $PROM_STATUS to $PROM_STATUS_FILE"
-  echo "node_svc_checker_check_status $PROM_STATUS" > $PROM_STATUS_FILE
+  info "Saving status: $CHECKER_PROM_STATUS to $CHECKER_PROM_STATUS_FILE"
+  echo "node_svc_checker_check_status $CHECKER_PROM_STATUS" > $CHECKER_PROM_STATUS_FILE
 }
 
 onFailure() {
-  PROM_STATUS=1
+  CHECKER_PROM_STATUS=1
   warn "Detected the monitored service is unhealthy."
   if [ "$CHECKER_CORDON_NODE" == "true" ]; then
-    if ! $NODE_IS_CORDONED; then
+    if ! $CHECKER_NODE_IS_CORDONED; then
       warn "Cordoning node $CHECKER_NODE_NAME"
       kubectl cordon "$CHECKER_NODE_NAME" || abort
-      NODE_IS_CORDONED=true
+      CHECKER_NODE_IS_CORDONED=true
     fi
   fi
   if [ "$CHECKER_DRAIN_NODE" == "true" ]; then
-    if ! $NODE_IS_DRAINED; then
+    if ! $CHECKER_NODE_IS_DRAINED; then
       warn "Draining node $CHECKER_NODE_NAME"
-      kubectl drain "$CHECKER_NODE_NAME" --ignore-daemonsets=true --delete-emptydir-data || abort
-      NODE_IS_DRAINED=true
+      kubectl drain "$CHECKER_NODE_NAME" \
+        --ignore-daemonsets=true \
+        --delete-emptydir-data || abort
+      CHECKER_NODE_IS_DRAINED=true
     fi
   fi
   if [ "$CHECKER_TAINT_NODE" == "true" ]; then
-    if ! $NODE_IS_TAINTED; then
+    if ! $CHECKER_NODE_IS_TAINTED; then
       warn "Tainting node $CHECKER_NODE_NAME"
-      kubectl taint node "$CHECKER_NODE_NAME" "$CHECKER_TAINT_KEY=$CHECKER_TAINT_VALUE:$CHECKER_TAINT_EFFECT" || abort
-      NODE_IS_TAINTED=true
+      kubectl taint node --overwrite \
+        "$CHECKER_NODE_NAME" \
+        "$CHECKER_TAINT_KEY=$CHECKER_TAINT_VALUE:$CHECKER_TAINT_EFFECT" || abort
+      CHECKER_NODE_IS_TAINTED=true
     fi
   fi
 }
 
 onSuccess() {
-  PROM_STATUS=0
+  CHECKER_PROM_STATUS=0
   if [ "$CHECKER_CORDON_NODE" == "true" ]; then
-    if $NODE_IS_CORDONED; then
+    if $CHECKER_NODE_IS_CORDONED; then
       info "Uncordoning node $CHECKER_NODE_NAME"
       kubectl uncordon "$CHECKER_NODE_NAME" || abort
-      NODE_IS_CORDONED=false
+      CHECKER_NODE_IS_CORDONED=false
     fi
   fi
   if [ "$CHECKER_DRAIN_NODE" == "true" ]; then
-    if $NODE_IS_DRAINED; then
-      NODE_IS_DRAINED=false
+    if $CHECKER_NODE_IS_DRAINED; then
+      CHECKER_NODE_IS_DRAINED=false
     fi
   fi
   if [ "$CHECKER_TAINT_NODE" == "true" ]; then
-    if $NODE_IS_TAINTED; then
+    if $CHECKER_NODE_IS_TAINTED; then
       info "Removing taint from node $CHECKER_NODE_NAME"
-      kubectl taint node "$CHECKER_NODE_NAME" "$CHECKER_TAINT_KEY=$CHECKER_TAINT_VALUE:$CHECKER_TAINT_EFFECT-" || abort
-      NODE_IS_TAINTED=false
+      kubectl taint node --overwrite \
+        "$CHECKER_NODE_NAME" \
+        "$CHECKER_TAINT_KEY=$CHECKER_TAINT_VALUE:$CHECKER_TAINT_EFFECT-" || abort
+      CHECKER_NODE_IS_TAINTED=false
     fi
   fi
 }
@@ -132,6 +180,13 @@ mainLoop() {
 
   local counter=0
   local md5_orig
+
+  # shellcheck disable=SC1090
+  source "$CHECKER_CONFIG_PATH"
+  # sleep once here to stampeding herd calls to  K8s API on initial status refresh
+  info "Waiting random delay up to $MAXWAIT seconds before starting."
+  sleep $((MINWAIT+RANDOM % (MAXWAIT-MINWAIT)))
+  refreshStatus
 
   while true; do
     savePromStatus
