@@ -51,7 +51,7 @@ metadata:
     prometheus: system
     role: alert-rules
   name: {{ include "node-svc-checker.name" . }}
-  namespace: kubevirt
+  namespace: {{ .Values.namespace }}
 spec:
   groups:
   - name: nodesvcchecker.rules
