@@ -74,8 +74,8 @@ A file such as `values_0-1-0.yaml` is generated. Determine any customizations ne
 | checker.drainNodeOnFailure | bool | if true, the node will be drained when a failure is declared |
 | checker.taintNodeOnFailure | bool | if true, the node will be tainted with a user defined taint when a failure is declared |
 | checker.nodeTaint.key | string | when `checker.taintNodeOnFailure` is true, use this as the taint key |
-| checker.nodeTaint.key | string | when `checker.taintNodeOnFailure` is true, use this as the taint value |
-| checker.nodeTaint.key | string | when `checker.taintNodeOnFailure` is true, use this as the taint effect |
+| checker.nodeTaint.value | string | when `checker.taintNodeOnFailure` is true, use this as the taint value |
+| checker.nodeTaint.effect | string | when `checker.taintNodeOnFailure` is true, use this as the taint effect |
 | nodeSelector | string | when set, will determine which node(s) the DaemonSet is run on |
 
 
