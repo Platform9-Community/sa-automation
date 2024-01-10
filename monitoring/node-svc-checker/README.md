@@ -29,6 +29,12 @@ The architecture is as follows.
 
 ## Prerequisites
 
+Install `helm` if necessary:
+
+```
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+```
+
 While the components can be easily installed via `helm` command, a wrapper leveraging `just` command recipes has been used.
 
 To install `just` use one of these [packages](https://github.com/casey/just#packages)
@@ -197,3 +203,8 @@ INFO: Running /tmp/foo.sh
 INFO: Uncordoning node 172.29.21.117
 node/172.29.21.117 uncordoned
 ```
+
+## Prometheus Alertmanager Integration
+
+There is a [guide in this repo](./alertmanager/README.md) for integrating with Prometheus Alertmanager.
+

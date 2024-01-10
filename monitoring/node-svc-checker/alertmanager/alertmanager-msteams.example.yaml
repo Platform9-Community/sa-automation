@@ -1,0 +1,19 @@
+global:
+  resolve_timeout: 5m
+route:
+  group_by: ['instance', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 96h
+  receiver: webhook # default receiver
+  routes:
+    - receiver: msteams
+      matchers:
+        - service=~"node-svc-checker"
+
+receivers:
+  - name: webhook
+  - name: msteams
+    webhook_configs:
+      - url: http://prometheus-msteams:2000/yourchannelname
+        send_resolved: true
