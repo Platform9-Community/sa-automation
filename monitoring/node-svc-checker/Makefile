@@ -25,7 +25,7 @@ HELM_COMMON := $(RELEASE_NAME) $(CHART_REPO)/$(CHART_NAME) \
 KUBECTL_COMMON := --context $(KUBE_CONTEXT) --kubeconfig $(KUBECONFIG)
 
 default:
-	@echo "Run one of the following targets: generate_values, template, install, upgrade \
+	@echo "Run one of the following targets: generate_values, template, install, upgrade, \
 	uninstall, list"
 
 generate_values:

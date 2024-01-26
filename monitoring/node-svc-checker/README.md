@@ -41,7 +41,7 @@ At any time to view the targets available type `make`:
 
 ```
 $ make
-Run one of the following targets: generate_values, template, install, upgrade uninstall, list
+Run one of the following targets: generate_values, template, install, upgrade, uninstall, list
 ```
 
 Export your `KUBECONFIG` environment variable to point to the path of the target cluster's local kubeconfig file.
@@ -65,7 +65,7 @@ Generate a values file to customize:
 make generate_values
 ```
 
-A file such as `values_0-1-0.yaml` is generated. Determine any customizations necessary, edit the file accordingly. While there are numerous other values that can be customized, the following are the most important and likely ones to consider.
+A file such as `values-node-svc-checker-0-1-0.yaml` is generated. Determine any customizations necessary, edit the file accordingly. While there are numerous other values that can be customized, the following are the most important and likely ones to consider.
 
 | Value | Type | Description |
 | --- | --- | --- |
