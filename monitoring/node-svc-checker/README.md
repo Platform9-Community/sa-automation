@@ -35,21 +35,13 @@ Install `helm` if necessary:
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 ```
 
-While the components can be easily installed via `helm` command, a wrapper leveraging `just` command recipes has been used.
+While the components can be easily installed via `helm` command, a wrapper leveraging `make` command targets has been used.
 
-To install `just` use one of these [packages](https://github.com/casey/just#packages)
-
-At any time to view the recipes available in the `justfile` type `just`:
+At any time to view the targets available type `make`:
 
 ```
-$ just
-Available recipes:
-    generate_values
-    template
-    install
-    upgrade
-    uninstall
-    list
+$ make
+Run one of the following targets: generate_values, template, install, upgrade uninstall, list
 ```
 
 Export your `KUBECONFIG` environment variable to point to the path of the target cluster's local kubeconfig file.
@@ -64,7 +56,7 @@ Since you will use helm to deploy to the cluster, you first need to make any cus
 
 Generate a values file to customize:
 ```
-just generate_values
+make generate_values
 ```
 
 A file such as `values_0-1-0.yaml` is generated. Determine any customizations necessary, edit the file accordingly. While there are numerous other values that can be customized, the following are the most important and likely ones to consider.
@@ -89,13 +81,13 @@ Once customizations, have been made, review the manifests by rendering the helm 
 will NOT deploy them to the cluster, simply renders them to the console:
 
 ```
-just template
+make template
 ```
 
 Once satisfied, deploy the manifests to the cluster.
 
 ```
-$ just install
+make install
 helm install node-svc-checker-0-1-0 ./helm/node-svc-checker   --version 0.1.0   --create-namespace   --values values_0-1-0.yaml  --kubeconfig /home/jmiller/Downloads/calico-rspc.yaml --kube-context default
 NAME: node-svc-checker-0-1-0
 LAST DEPLOYED: Wed Dec  6 09:28:19 2023
@@ -108,7 +100,7 @@ TEST SUITE: None
 Review the installation
 
 ```
-$ just list
+make list
 helm list --filter node-svc-checker --all-namespaces --kubeconfig /home/jmiller/Downloads/calico-rspc.yaml --kube-context default
 NAME                    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
 node-svc-checker-0-1-0  default         1               2023-12-06 09:28:19.126562358 -0500 EST deployed        node-svc-checker-0.1.0  0.1.0
@@ -125,13 +117,13 @@ nsc         node-svc-checker-w7vx8   1/1     Running   0          4m36s   10.20.
 ## Uninstall
 
 ```
-just uninstall
+make uninstall
 ```
 
 ## Upgrade
 
 ```
-just upgrade
+make upgrade
 ```
 
 ## Troubleshooting

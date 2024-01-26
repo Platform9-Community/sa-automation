@@ -29,22 +29,6 @@ spec:
       priorityClassName: "{{ .Values.priorityClassName }}"
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       containers:
-        - name: metrics
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          image: "{{ .Values.busybox.repository }}:{{ .Values.busybox.tag }}"
-          command: ["/bin/sh"]
-          args:
-            - -c
-            - echo -e "H:/srv/\\nI:index.txt" > /etc/httpd.conf ; httpd -fv -p $HTTPD_LISTEN_PORT -c /etc/httpd.conf
-          env:
-            - name: HTTPD_LISTEN_PORT
-              value: "{{ .Values.busybox.port }}"
-          ports:
-            - name: metrics-http
-              containerPort: {{ .Values.busybox.port }}
-          volumeMounts:
-            - name: metrics-shared-data
-              mountPath: /srv/metrics
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
@@ -63,14 +47,39 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           volumeMounts:
-            - name: metrics-shared-data
-              mountPath: /metrics
-            - name: wrapper-script
-              mountPath: /nsc
+            {{- toYaml .Values.volumeMounts | default "" | nindent 12 }}
             - name: target-script
               mountPath: {{ dir .Values.checker.nodeCheckScriptPath }}
             - name: settings-rc
               mountPath: /nsc/etc
+        - name: metrics
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.busybox.repository }}:{{ .Values.busybox.tag }}"
+          command: ["/bin/sh"]
+          args:
+            - -c
+            - echo -e "H:/srv/\\nI:index.txt" > /etc/httpd.conf ; httpd -fv -p $HTTPD_LISTEN_PORT -c /etc/httpd.conf
+          env:
+            - name: HTTPD_LISTEN_PORT
+              value: "{{ .Values.busybox.port }}"
+          ports:
+            - name: metrics-http
+              containerPort: {{ .Values.busybox.port }}
+          volumeMounts:
+            - name: metrics-shared-data
+              mountPath: /srv/metrics
+      volumes:
+        {{- toYaml .Values.volumes | default "" | nindent 8 }}
+        - name: wrapper-script
+          secret:
+            secretName: {{ include "node-svc-checker.name" . }}
+            defaultMode: 0755
+        - name: target-script
+          hostPath:
+            path: {{ dir .Values.checker.nodeCheckScriptPath }}
+        - name: settings-rc
+          configMap:
+            name: {{ include "node-svc-checker.name" . }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -79,16 +88,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-      - name: metrics-shared-data
-        emptyDir: {}
-      - name: wrapper-script
-        secret:
-          secretName: {{ include "node-svc-checker.name" . }}
-          defaultMode: 0755
-      - name: target-script
-        hostPath:
-          path: {{ dir .Values.checker.nodeCheckScriptPath }}
-      - name: settings-rc
-        configMap:
-          name: {{ include "node-svc-checker.name" . }}

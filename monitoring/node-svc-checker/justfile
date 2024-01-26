@@ -7,16 +7,20 @@ kube_context := env_var_or_default("KUBE_CONTEXT", "default")
 chart_name := "node-svc-checker"
 chart_repo := "./helm"
 chart_version := "0.1.0"
+namespace := "nsc-system"
+# end customizations
+
 version_safe := replace(chart_version,'.','-')
 release := chart_name + "-" + version_safe
-# end customizations
 
 _helm_common := '--kubeconfig $kubeconfig --kube-context $kube_context'
 
 _helm_args := '$release $chart_repo/$chart_name \
   --version $chart_version \
+  --namespace $namespace \
   --create-namespace \
-  --values values_$version_safe.yaml \
+  --set namespace=$namespace \
+  --values values-$version_safe.yaml \
 '
 
 _kubectl_common := "--context $kube_context --kubeconfig $kubeconfig"
@@ -35,21 +39,21 @@ _exec_sh *ARGS:
   {{ARGS}}
 
 generate_values:
-  @{{_sh}} "if [[ -f values_{{version_safe}}.yaml ]]; then cp values_{{version_safe}}.yaml values_{{version_safe}}.yaml.$(date '+%Y%m%d_%s'); fi"
+  @{{_sh}} "if [[ -f values-{{version_safe}}.yaml ]]; then cp values-{{version_safe}}.yaml values-{{version_safe}}.yaml.$(date '+%Y%m%d_%s'); fi"
   @{{_sh}} "helm show values {{chart_repo}}/{{chart_name}} --version \
-    {{chart_version}} > values_{{version_safe}}.yaml"
+    {{chart_version}} > values-{{version_safe}}.yaml"
 
 template:
   @{{_sh}} "helm template {{_helm_args}} {{_helm_common}}"
 
 install:
-  @{{_sh}} "helm install {{_helm_args}} {{_helm_common}}"
+  @{{_sh}} "helm upgrade --install {{_helm_args}} {{_helm_common}}"
 
 upgrade:
   @{{_sh}} "helm upgrade {{_helm_args}} {{_helm_common}}"
 
 uninstall:
-  @{{_sh}} "helm uninstall {{release}} {{_helm_common}} || true"
+  @{{_sh}} "helm uninstall {{release}} --namespace {{namespace}} {{_helm_common}} || true"
 
 list:
   @{{_sh}} "helm list --filter {{chart_name}} --all-namespaces --kubeconfig {{kubeconfig}} \
