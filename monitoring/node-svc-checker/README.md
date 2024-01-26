@@ -50,6 +50,12 @@ Export your `KUBECONFIG` environment variable to point to the path of the target
 export KUBECONFIG=/some/file.yaml
 ```
 
+Adjust the `NAMESPACE` variable in the `Makefile` to the namespace you with to deploy the helm chart.
+
+```
+NAMESPACE := nsc-system
+```
+
 ## Installation
 
 Since you will use helm to deploy to the cluster, you first need to make any customizations to the values of the chart.
