@@ -69,7 +69,6 @@ A file such as `values_0-1-0.yaml` is generated. Determine any customizations ne
 
 | Value | Type | Description |
 | --- | --- | --- |
-| namespace | string | namespace to deploy into |
 | checker.debug | boolean | set to true to enable debug level logs |
 | checker.nodeCheckScriptPath | string | the path to the monitoring script file on the node(s) |
 | checker.scriptPeriodSec | integer | the frequency in seconds at which the monitoring script will be invoked |
