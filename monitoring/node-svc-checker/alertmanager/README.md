@@ -141,3 +141,14 @@ kubectl delete -n pf9-monitoring secret alertmanager-sysalert
 kubectl create secret generic alertmanager-sysalert -n pf9-monitoring --from-file=alertmanager.yaml
 kubectl -n pf9-monitoring logs alertmanager-sysalert-0 -c alertmanager -f
 ```
+
+## Troubleshooting
+
+You can simulate an alert by sending this [payload](https://github.com/prometheus-msteams/prometheus-msteams/tree/master?tab=readme-ov-file#simulating-a-prometheus-alerts-to-teams-channel) to the prometheus-msteams endpoint.
+
+View the Alertmanager state by first forwarding the SVC port locally:
+```
+kubectl port-forward svc/sys-alertmanager -n pf9-monitoring 9093:9093
+```
+
+Then go to [http://localhost:9093](http://localhost:9093) in your browser.
