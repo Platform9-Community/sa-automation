@@ -45,7 +45,7 @@ Wait for it to come up:
 kubectl get pods -l app=prometheus-msteams --namespace pf9-monitoring -w
 ```
 
-Create an `alertmanager-custom.yaml` file:
+Create an `alertmanager.yaml` file:
 
 ```
 global:
@@ -71,7 +71,7 @@ receivers:
 
 ## Slack
 
-Create an `alertmanager-custom.yaml` file:
+Create an `alertmanager.yaml` file:
 ```
 global:
   resolve_timeout: 5m
@@ -138,6 +138,6 @@ another customization added, you will need to merge together the values from `al
 ```
 kubectl get secret -n pf9-monitoring alertmanager-sysalert -o yaml > alertmanager-backup.yaml
 kubectl delete -n pf9-monitoring secret alertmanager-sysalert
-kubectl create secret generic alertmanager-sysalert -n pf9-monitoring --from-file=alertmanager-custom.yaml
+kubectl create secret generic alertmanager-sysalert -n pf9-monitoring --from-file=alertmanager.yaml
 kubectl -n pf9-monitoring logs alertmanager-sysalert-0 -c alertmanager -f
 ```
