@@ -1,0 +1,1 @@
+This is a repo that holds terraform automation that creates AWS infrastructure on whicn an EMP instance can be creaed for EMP release candidate validations.
