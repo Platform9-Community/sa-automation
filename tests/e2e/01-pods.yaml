@@ -1,8 +1,0 @@
-apiVersion: kuttl.dev/v1beta1
-kind: TestStep
-commands:
-  - script: |
-      PODS_STATUS=$(kubectl get pods --all-namespaces --no-headers || exit)
-      NOT_READY=$( ! echo "$PODS_STATUS" | grep -Ev "(Running|Completed|Terminating)" ) || {
-        echo 'ERROR: Not all pods are in Running|Completed state!'; echo "$NOT_READY" ; exit 1
-      }

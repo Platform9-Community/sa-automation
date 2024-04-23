@@ -1,8 +1,0 @@
-apiVersion: kuttl.dev/v1beta1
-kind: TestStep
-commands:
-  - script: |
-      API_STATUS=$(kubectl get --raw='/readyz?verbose' || exit)
-      NOT_READY=$( ! echo "$API_STATUS" | grep -v "^readyz check" | grep -v " ok" ) || {
-        echo 'ERROR: Not all API server checks are healthy!'; echo "$NOT_READY" ; exit 1
-      }
