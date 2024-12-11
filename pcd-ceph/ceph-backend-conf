@@ -1,0 +1,9 @@
+rbd_pool = volumes
+rbd_user = cinder
+volumes_dir = /opt/pf9/etc/pf9-cindervolume-base/volumes/
+rbd_ceph_conf = /etc/ceph/ceph.conf
+rbd_secret_uuid = 013d74e6-4d67-43fe-9ae2-573c2d0124c1
+rbd_max_clone_depth = 5
+rbd_store_chunk_size = 4
+rados_connect_timeout = -1
+rbd_flatten_volume_from_snapshot = false
