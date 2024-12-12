@@ -35,7 +35,7 @@ virsh secret-define --file secret.xml
 virsh secret-set-value --secret ${UUID} --base64 ${KEY}
 fi
 #
-unser FILE
+unset FILE
 FILE=/opt/pf9/etc/pf9-cindervolume-base/conf.d/cinder_override.conf
 echo ${FILE}
 cat > ${FILE} <<EOF
