@@ -1,14 +1,29 @@
 #! /bin/bash
+# script is for three monitor nodes. Make appopriate changes in script if there are more or less number of monitors in your cluster. 
+
+# ceph cluster's uuid in /etc/ceph.conf
 FSID=fb9bd1a4-b3ac-11ef-ba98-ad08389d3a5c
+
+# keyring of the ceph user created for openstack cinder
 KEY=AQC/zFdnWx9TBxAAXTvltShVNr2vh+hpIuzn6A==
+
+# ceph monitor nodes
 M1=172.29.22.10
 M2=172.29.22.20
 M3=172.29.22.30
+
+# uuid created with uuidgen command.
 UUID=013d74e6-4d67-43fe-9ae2-573c2d0124c1
-POOL=volumes
+
+# ceph username for the above keyring
 USER=cinder
+
+# ceph pool for openstack volumes
+POOL=volumes
+
+# location of keyring file on cinder node
 FILE=/etc/ceph/ceph.client.cinder.keyring
-#
+
 apt-get install -y ceph-common
 cat > /etc/ceph/ceph.conf <<EOF
 [global]
@@ -16,7 +31,7 @@ cat > /etc/ceph/ceph.conf <<EOF
 	mon_host = [v2:${M1}:3300/0,v1:${M1}:6789/0] [v2:${M2}:3300/0,v1:${M2}:6789/0] [v2:${M3}:3300/0,v1:${M3}:6789/0]
 EOF
 cat > ${FILE} <<EOF
-[client.cinder]
+[client.${USER}]
 	key = ${KEY}
 EOF
 chown pf9:pf9group /etc/ceph/ceph.conf ${FILE}
@@ -26,7 +41,7 @@ cat > secret.xml <<EOF
 <secret ephemeral='no' private='no'>
 <uuid>${UUID}</uuid>
 <usage type='ceph'>
-<name>client.cinder secret</name>
+<name>client.${USER} secret</name>
 </usage>
 </secret>
 EOF
