@@ -1190,6 +1190,13 @@ python3 pcdExpress.py -portal <name> -region <name>  --env staging --apply-netwo
 ./pcdExpress  -env-file user_configs/acme/nyc/acme-nyc-environment.yaml  --create-hostagents-configs yes
 ```
 
+**Run the express tool with the below option to inject the on-prem DU
+certificates:**
+```
+./pcdExpress -env-file user
+configs/acme/nyc/acme-nyc-environment.yaml -onprem yes -ip-addr <vip/extIP> -fqdn <fqdn-region> -fqdninfra <fqdn-infra>
+```
+
 **Apply the playbook for the nodes**
 ```
 ./pcdExpress  -env-file user_configs/acme/nyc/acme-nyc-environment.yaml  -apply-hosts-onboard yes
