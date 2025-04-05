@@ -1,9 +1,19 @@
 import subprocess
 import json
+import argparse
+import os
+###############################################################################
+#                           Argument parsing                                  #
+###############################################################################
+parser = argparse.ArgumentParser(description="Utility to configure PCD and enrol nodes",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("-user", "--user", action='store', help="takes maas user name as input (REQUIRED)", required=True)
+args = parser.parse_args()
 
+#get local directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Step 1: Fetch deployed machines
-result = subprocess.run(["maas", "admin", "machines", "read"], capture_output=True, text=True, check=True)
+result = subprocess.run(["maas", f"{args.user}", "machines", "read"], capture_output=True, text=True, check=True)
 
 # Parse JSON output
 machines = json.loads(result.stdout)
@@ -58,7 +68,7 @@ template_section = """\
 """
 
 # Output inventory with correct indentation
-output_file = "/root/vm_inventory.yaml"
+output_file = f"{current_dir}/vm_inventory.yaml"
 with open(output_file, "w") as file:
     file.write(template_section)  # Write the template section header
     for ip, data in inventory.items():
