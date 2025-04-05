@@ -1,19 +1,43 @@
-import yaml
+mport yaml
 import subprocess
 import json
 from jinja2 import Environment, FileSystemLoader
 import os
+import argparse
+
+#get local directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+#home directory:
+home = os.getenv("HOME")
+
+
 # Prompt user for inputs with defaults
-region = input("Enter REGION [default: jrs]: ") or "jrs"
-url = input("Enter URL [default: https://exalt-pcd-1-jrs.app.staging-pcd.platform9.com/]: ") or "https://exalt-pcd-1-jrs.app.staging-pcd.platform9.com/"
-portal = input("Enter PORTAL [default: exalt-pcd-1]: ") or "exalt-pcd-1"
+#region = input("Enter REGION [default: jrs]: ") or "jrs"
+#url = input("Enter URL [default: https://exalt-pcd-1-jrs.app.staging-pcd.platform9.com/]: ") or "https://exalt-pcd-1-jrs.app.staging-pcd.platform9.com/"
+#portal = input("Enter PORTAL [default: exalt-pcd-1]: ") or "exalt-pcd-1"
+#environment = input("Enter Environment [default: stage]: ") or "stage"
 user = "ubuntu"
-environment = "stage"
+
+###############################################################################
+#                           Argument parsing                                  #
+###############################################################################
+parser = argparse.ArgumentParser(description="Utility to configure PCD and enrol nodes",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("-portal", "--portal", action='store', help="takes region name as input (REQUIRED)", required=True)
+parser.add_argument("-region", "--region", action='store', help="takes site name as input to form DU name. DU=<portal>-<region> (REQUIRED)", required=True)
+parser.add_argument("-environment", "--environment", action='store', help="takes a string value to segregate hosts in the side. Value: STRING", required=True)
+parser.add_argument("-url ", "--url", action='store', help="Set portal URL for blueprint/hostconfigs/network resources", required=True)
+parser.add_argument("-setup-environment", "--setup-environment", action='store', help="Setup environment for ansible play exec and management (REQUIRED). Values: yes|no", required=True)
+args = parser.parse_args()
+
 
 # Define file paths
-inventory_file = "/root/vm_inventory.yaml"
-output_file = "/root/vars.yml"
-template_file = "/root/vars_template.j2"
+#inventory_file = "/root/vm_inventory.yaml"
+inventory_file = f"{current_dir}/vm_inventory.yaml"
+#output_file = "/root/vars.yml"
+output_file = f"{current_dir}/vars.yml"
+#template_file = "/root/vars_template.j2"
+template_file = f"{current_dir}/vars_template.j2"
 
 # Get OpenStack Token
 token_result = subprocess.run(["openstack", "token", "issue", "-f", "value", "-c", "id"], capture_output=True, text=True, check=True)
@@ -21,8 +45,8 @@ token = token_result.stdout.strip()
 
 # Fetch host configurations from the blueprint
 host_config_map = {}
-resmgr_url = f"{url}resmgr/v2/hostconfigs/"
-blueprint_url = f"{url}resmgr/v2/blueprint"
+resmgr_url = f"{args.url}/resmgr/v2/hostconfigs/"
+blueprint_url = f"{args.url}/resmgr/v2/blueprint"
 headers = {"X-Auth-Token": token, "Content-Type": "application/json"}
 try:
     result = subprocess.run(["curl", "-X", "GET", "-H", f"X-Auth-Token: {token}", "-H", "Content-Type: application/json", resmgr_url, "-s"],
@@ -63,9 +87,9 @@ except Exception as e:
 # Prepare vars.yml content
 
 vars_data = {
-    "cloud": region,
-    "url": url,
-    "environment": environment,
+    "cloud": args.region,
+    "url": args.url,
+    "environment": args.environment,
     "hosts": {}
 }
 
@@ -95,7 +119,7 @@ for ip, data in inventory.items():
     # Prepare the host data
     host_data = {
         "ansible_ssh_user": user,
-        "ansible_ssh_private_key_file": "/root/.ssh/id_rsa",
+        "ansible_ssh_private_key_file": f"{home}/.ssh/id_rsa",
         "roles": roles,
         "hostconfigs": matched_hostconfig,
     }
@@ -122,11 +146,13 @@ for ip, data in inventory.items():
 
 
 # Set up the Jinja2 environment and load the template file
-env = Environment(loader=FileSystemLoader('/root'))  # Set path to template directory
+#env = Environment(loader=FileSystemLoader('/root'))  # Set path to template directory
+#template = env.get_template('vars_template.j2')  # Load the template
+env = Environment(loader=FileSystemLoader(f'{current_dir}'))  # Set path to template directory
 template = env.get_template('vars_template.j2')  # Load the template
 
 # Render the template with the data
-yaml_content = template.render(url=url, cloud=region, environment=environment, hosts=vars_data["hosts"])
+yaml_content = template.render(url=args.url, cloud=args.region, environment=args.environment, hosts=vars_data["hosts"])
 
 # Write the rendered YAML content to the file
 try:
@@ -138,27 +164,30 @@ except Exception as e:
 
 # Change to the target directory
 #subprocess.run(["cd", "/root/pcd_ansible-pcd_develop"], shell=True, check=True)
-os.chdir("/root/pcd_ansible-pcd_develop")
+#os.chdir("/root/pcd_ansible-pcd_develop")
+os.chdir(f"{current_dir}/pcd_ansible-pcd_develop")
 # Copy vars.yml file to the base template used by the Ansible playbook
 subprocess.run(["cp", "-f", f"{output_file}", "user_resource_examples/templates/host_onboard_data.yaml.j2"], check=True)
 
 # Run the PCD Ansible playbooks
-subprocess.run(["./pcdExpress", "-portal", portal, "-region", region, "-env", environment, "-url", url, "-ostype", "ubuntu", "-setup-environment", "yes"], check=True)
+subprocess.run(["./pcdExpress", "-portal", args.portal, "-region", args.region, "-env", args.environment, "-url", args.url, "-ostype", "ubuntu", "-setup-environment", args.setup_environment], check=True)
 
 subprocess.run([
     "./pcdExpress",
-    "-env-file", f"user_configs/{portal}/{region}/{portal}-{region}-{environment}-environment.yaml",
-    "-render-userconfig", f"user_configs/{portal}/{region}/node-onboarding/{portal}-{region}-nodesdata.yaml"
+    "-env-file", f"user_configs/{args.portal}/{args.region}/{args.portal}-{args.region}-{args.environment}-environment.yaml",
+    "-render-userconfig", f"user_configs/{args.portal}/{args.region}/node-onboarding/{args.portal}-{args.region}-nodesdata.yaml"
 ], check=True)
 
 subprocess.run([
     "./pcdExpress",
-    "-env-file", f"user_configs/{portal}/{region}/{portal}-{region}-{environment}-environment.yaml",
+    "-env-file", f"user_configs/{args.portal}/{args.region}/{args.portal}-{args.region}-{args.environment}-environment.yaml",
     "-create-hostagents-configs", "yes"
 ], check=True)
 
 subprocess.run([
     "./pcdExpress",
-    "-env-file", f"user_configs/{portal}/{region}/{portal}-{region}-{environment}-environment.yaml",
+    "-env-file", f"user_configs/{args.portal}/{args.region}/{args.portal}-{args.region}-{args.environment}-environment.yaml",
     "-apply-hosts-onboard", "yes"
 ], check=True)
+
+
