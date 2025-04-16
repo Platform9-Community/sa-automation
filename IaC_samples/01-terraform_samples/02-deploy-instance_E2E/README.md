@@ -10,10 +10,6 @@ This sample can do following things:
 
 Steps to execute:
 - Ensure `opentofu` packages are installed on the host and the host has access to the PCD environment. 
-- Ensure latest python3-openstackclient and python3-octaviaclient packages are installed:
-```bash
-sudo apt-get install python3-openstackclient python3-octaviaclient -y
-```
 - Download the required directory locally host.
 - From inside the directory, run:
 ```bash
