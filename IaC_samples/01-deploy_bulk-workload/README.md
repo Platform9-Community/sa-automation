@@ -6,7 +6,7 @@ Each directory is a independent template which can be individually downloaded an
 
 ### Howto 
 
-#### 01-deploy_sample_1
+#### 01-deploy_bulk-workload
 This sample can do following things:
 - Deploy nova instances based on user provided counts. The instances are mapped to the subnets that will be created.
 - Deploy independent cinder volumes based on user provided counts
