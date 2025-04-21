@@ -1,135 +1,69 @@
-# Role assignment and nodesdata.yaml file automation  Role assignment and nodesdata.yaml file automation  
+# Adding and deploying a machine to MAAS server, then PCD joining with an automated script 
+ 
+
+### This automation process is split into two sections: 
+
+- Automate the process of enrolling baremetals into MaaS 
+- Onboarding is done by triggering Ansible playbooks. 
 
  
 
-### This automation process is split into two scripts: 
-
-- Create Inventory Script (create_inventory.py) – Retrieves VM details from MAAS and generates an inventory file. 
-
-- Onboarding and Role Assignment Script (onboarding_dynamic.py) – Maps host configurations, validates roles, and triggers Ansible playbooks for onboarding. 
-
  
 
- 
+### How to use?
 
-### Create inventory script (create_inventory.py): Create inventory script (create_inventory.py): 
+Download the script and prerequisite files into the same directory.
+You need to edit the following files according to your environment before running the script:
 
-Uses MAAS CLI to fetch deployed VM details, including IPs and network interfaces. 
+1. machines.csv
+2. cloud-init-template.yaml
 
-Generates a structured inventory file (vm_inventory.yaml). 
+#### Prerequisites: 
 
- 
+1. Maas cli login
+sudo maas login {maas admin user} http://{maas ip}:5240/MAAS/ $(sudo maas apikey --generate --username={maas admin user}) 
 
+2. Clouds.yaml created in /root/.config/openstack/clouds.yaml 
+
+3. pcd_ansible-pcd_develop directory exists
+   
 Run the script:  
 
 
-
-    python3 create_inventory.py 
+    sudo python3 automation-script.py \
+  --maas_user admin \
+  --csv_filename machines.csv \
+  --cloud_init_template cloud-init.yaml \
+  --portal exalt-pcd \
+  --region jrs \
+  --environment stage \
+  --url https://exalt-pcd-jrs.app.qa-pcd.platform9.com/ \
+  --setup-environment yes \
+  --ssh_user ubuntu
  
 
-This script generates the following output: 
-
-    Generated inventory file at '/root/vm_inventory.yaml' successfully! 
- 
-this script will create a yaml file with three main sections: 
-```yaml
-172.25.1.183:   #ip which Maas can use to communicate with the machine and ssh to it 
-      interfaces:
-         - ens160        #interfaces that exists on the machine 
-         - ens192
-      roles:
-          - node_onboard      # this part will be manually edited by the customer add roles	                             - persistent-storage
-      persistent_storage:    #this part will be added incase persistent_storage role is added 
-           backends:
-                - "NEW-NFS"
-```
-
-### Node onboarding and role assignment script (onboarding_dynamic.py): Node onboarding and role assignment script (onboarding_dynamic.py): 
- 
-
-This script automates the process of fetching host configurations, validating inventory data, and generating a vars.yml file required for PCD host onboarding. It then triggers Ansible playbooks to apply the configurations. 
 
  
-Run the script:  
-
-
-
-    python3 onboarding_dynamic.py 
  
+##### Script Functionality: 
 
-##### Script Functionality: Script Functionality: 
+###### 1. It will add the machines to MAAS and commission them.
 
-###### 1. User Input Collection 
+###### 2. When in ready state, it will generate a cloud-init file for each machine with the IP specified for each one from the CSV file,it will be generated in the tmp directory,and then deploy the OS.  
 
-Prompts the user to enter values for region, URL, portal, and environment (with defaults). 
-
-###### 2. Fetching some blueprint information using API call to to match against the inventory. 
- 
-
-- Hostconfigs defined in the bluprint and the managemant interface  
-
-- Backend storage label 
- 
-
-###### 3. Validating Inventory Data and assigns the correct host configuration. 
- 
-###### Validation: 
-
- 
-
-- Ensures each host has assigned roles; otherwise, it raises an error and stops execution. 
- 
-
-`Error: No roles defined for host 172.25.1.185. Each host must have at least one role. `
-
- 
-
-- Ensure that the host interface has a hostconfig configured in the blueprint; otherwise, it raises an error and stops execution.  
- 
-
-`Error: No matched hostconfig found for IP 172.25.1.183 with interfaces ['ens160'] `
-
- 
-
-- Ensure that a persistent_storage section is configured in the inventory file incase there is a persistent_storage role added; otherwise, it raises an error and stops execution. 
- 
-
-``Error: 'persistent_storage' section missing for host 172.25.1.185 with 'persistent-storage' role. ``
-
- 
-
-- If persistent_storage role and section is added in the inventory file will validate that the storage backend label exists in the blueprint, it raises an error and stops execution. 
- 
-`Error: Storage backend 'NEW' defined in inventory for host 172.25.1.185 is not present in the blueprint. `
-
-###### 4. Generating vars.yml using Jinja2 
+###### 3. After the deployment is done and successful, the onboarding process will begin. 
+###### 4. Generating vars.yaml using Jinja2 
 
 - Loads a template (vars_template.j2) and fills it with the extracted data. 
 
 - Saves the rendered YAML to vars.yml. 
 
- 
-
 ###### 5. Copying vars.yml to Ansible Playbook Directory 
-
 It will copy the vars file to user_resource_examples/templates/host_onboard_data.yaml.j2 	where this file will be used by the ansible playbooks  
 
- 
 
 ###### 6. Executing Ansible Playbooks for PCD Host Onboarding  
 
- Runs a series of pcdExpress commands 
 
 
-#### Prerequisites: 
-
-1. Maas cli login  
-
-3. Clouds.yaml created in /root/.config/openstack/clouds.yaml 
-
-5. openstackrc file created 
-
-7. python3-openstackclient / jq installed  
-
-9. pcd_ansible-pcd_develop directory exists 
 
