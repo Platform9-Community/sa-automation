@@ -20,8 +20,8 @@ def prepare_hosts_from_csv(csv_file, ssh_user, home, logger):
         status = row.get("deployment_status")
         if ip and status == "Deployed":
             hosts[ip] = {
-                "ansible_user": ssh_user,
-                "ansible_private_key_file": f"{home}/.ssh/id_rsa",
+                "ansible_ssh_user": ssh_user,
+                "ansible_ssh_private_key_file": f"{home}/.ssh/id_rsa",
                 "roles": ["node_onboard"]
             }
 
