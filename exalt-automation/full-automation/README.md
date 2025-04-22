@@ -13,6 +13,38 @@
 ### How to use?
 
 Download the script and prerequisite files into the same directory.
+.
+├── cloud-init_tempalte.yaml
+├── deploy_logs
+│   └── maas_deployment.log
+├── machines_tempalte.csv
+├── vars_template.j2
+├── main_script.py
+├── modules
+│   ├── maasHelper.py
+│   ├── onboard.py
+├── pcd_ansible-pcd_develop
+│   ├── ansible.cfg
+│   ├── ansible-collections-pf9
+│   ├── collections
+│   ├── inventory
+│   ├── logs
+│   │   └── pcd_installer_logs
+│   ├── Makefile
+│   ├── modules
+│   ├── pcdExpress
+│   ├── playbooks
+│   ├── README.md
+│   ├── README-old.md
+│   ├── roles
+│   ├── setup-local.sh
+│   ├── tasks
+│   ├── templates
+│   ├── user_resource_examples
+│   ├── vars
+│   └── yq_linux_amd64.1
+
+
 You need to create/provide the following files according to your environment before running the script you can use the templates provided in the prerequisites folder:
 
     1. machines_template.csv
