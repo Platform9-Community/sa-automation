@@ -5,8 +5,10 @@ import sys
 from jinja2 import Environment, FileSystemLoader
 
 def prepare_hosts_from_csv(csv_file, ssh_user, home, logger):
+    base, ext = os.path.splitext(csv_file)
+    new_csv_file = f"{base}_updated{ext}"
     try:
-        with open(csv_file, newline='') as csvfile:
+        with open(new_csv_file, newline='') as csvfile:
             rows = list(csv.DictReader(csvfile))
     except Exception as e:
         logger.error(f"Error reading CSV: {e}")
