@@ -52,7 +52,7 @@ You need to create/provide the following files according to your environment bef
 #### Run the script:  
 
 
-    sudo python3 main_script.py \
+    python3 main_script.py \
     --maas_user admin \
     --csv_filename machines.csv \
     --cloud_init_template cloud-init.yaml \
