@@ -41,7 +41,7 @@ You need to create/provide the following files according to your environment bef
 
     1. Maas cli login
  
-        sudo maas login <maas_user> http://<maas_ip>:5240/MAAS/ $(sudo maas apikey --generate --username=<maas_user>)
+        maas login <maas_user> http://<maas_ip>:5240/MAAS/ $(sudo maas apikey --generate --username=<maas_user>)
 
     2. Clouds.yaml created in /{home}/.config/openstack/clouds.yaml 
 
