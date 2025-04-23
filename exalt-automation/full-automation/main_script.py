@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 from modules import maasHelper, onboard 
+import time
 
 
 
@@ -45,10 +46,12 @@ if not os.path.isdir("pcd_ansible-pcd_develop"):
 logger.info("Starting deployment of baremetal nodes...")
 maasHelper.add_machines_from_csv(args.csv_filename,args.maas_user, args.max_workers,args.cloud_init_template,logger)
 
-
+logger.info("Waiting 20 seconds for the machines and their interfaces to be up before starting onboarding...")
+time.sleep(20)
 ###############################################################################
 #                      Load CSV rows and filter deployed                      #
 ###############################################################################
+
 onboard.start_pcd_onboarding(
     csv_filename=args.csv_filename,
     ssh_user=args.ssh_user,
