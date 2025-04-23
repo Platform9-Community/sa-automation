@@ -32,23 +32,29 @@ directory structure:
  │   ├── setup-local.sh ---> Set up the  environment for PCD onboarding
 ```
 
-You need to create/provide the following files according to your environment before running the script you can use the templates provided in the prerequisites folder:
 
-    1. machines_template.csv
-    2. cloud-init-template.yaml
 
 #### Prerequisites: 
-
+    
     1. Maas cli login
  
         maas login <maas_user> http://<maas_ip>:5240/MAAS/ $(sudo maas apikey --generate --username=<maas_user>)
 
-    2. Clouds.yaml created in /{home}/.config/openstack/clouds.yaml 
+    2. Clouds.yaml created in /{home}/.config/openstack/clouds.yaml
 
-    3. Set up the  environment for PCD onboarding by running the script setup-local.sh from inside pcd_ansible-pcd_develop directory
+    3. untar the prerequisites file 
+
+       tar -xzvf prerequisites.tar.gz
+
+    4. Set up the  environment for PCD onboarding by running the script setup-local.sh from inside pcd_ansible-pcd_develop directory
 
        sudo bash setup-local.sh
-   
+
+       
+You need to create/edit the following files according to your environment before running the script you can use the templates provided in the prerequisites folder:
+
+    1. machines_template.csv
+    2. cloud-init-template.yaml   
 #### Run the script:  
 
 
