@@ -36,25 +36,46 @@ directory structure:
 
 #### Prerequisites: 
     
-    1. Maas cli login
+1. Maas cli login
  
         maas login <maas_user> http://<maas_ip>:5240/MAAS/ $(sudo maas apikey --generate --username=<maas_user>)
 
-    2. Clouds.yaml created in /{home}/.config/openstack/clouds.yaml
+2. Clouds.yaml created in /{home}/.config/openstack/clouds.yaml
+   
+        clouds:
+          titan:
+            auth:
+             auth_url: https://<DU-name>.app.staging-pcd.platform9.com/keystone/v3
+             project_name: service
+             username: abc@ACME.com
+             password: *********
+             user_domain_name: default
+             project_domain_name: default
+            region_name: titan
+            interface: public
+            identity_api_version: 3
+            compute_api_version: 2
+            volume_api_version: 3
+            image_api_version: 2
+            identity_interface: public
+            volume_interface: public
 
-    3. untar the prerequisites file 
+3. untar the prerequisites file 
 
        tar -xzvf prerequisites.tar.gz
 
-    4. Set up the  environment for PCD onboarding by running the script setup-local.sh from inside pcd_ansible-pcd_develop directory
+4. Set up the  environment for PCD onboarding by running the script setup-local.sh from inside pcd_ansible-pcd_develop directory.
 
        sudo bash setup-local.sh
 
        
-You need to create/edit the following files according to your environment before running the script you can use the templates provided in the prerequisites folder:
+ 5. You need to create/edit the following files according to your environment before running the script you can use the templates provided in the prerequisites folder:
 
-    1. machines_template.csv
-    2. cloud-init-template.yaml   
+       1. machines_template.csv
+       2. cloud-init-template.yaml
+          
+  6. Ensure the SSH key for the MAAS server user (used to connect to deployed machines during onboarding) is added in the MAAS UI.
+        
 #### Run the script:  
 
 
@@ -68,16 +89,14 @@ You need to create/edit the following files according to your environment before
     --url https://exalt-pcd-jrs.app.qa-pcd.platform9.com/ \
     --max_workers 5 \
     --ssh_user ubuntu
+What the options mean:
+  - maas_user: MAAS admin username.
+  - csv_filename: CSV file path.
+  - cloud_init_template: Cloud-init template YAML path.
+  - max_workers: Maximum number of concurrent threads for provisioning.
+  - ssh_user: SSH user for Ansible.
 
-###### maas_user: MAAS admin username.
-###### csv_filename: CSV file path.
-###### cloud_init_template: Cloud-init template YAML path.
-###### max_workers: Maximum number of concurrent threads for provisioning.
-###### ssh_user: SSH user for Ansible.
 
-
-
- 
  
 ##### Script Functionality: 
 
