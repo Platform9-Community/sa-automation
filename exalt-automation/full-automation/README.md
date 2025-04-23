@@ -45,9 +45,9 @@ You need to create/provide the following files according to your environment bef
 
     2. Clouds.yaml created in /{home}/.config/openstack/clouds.yaml 
 
-    3. Set up the  environment for PCD onboarding by running the script pcd_ansible-pcd_develop/setup-local.sh
+    3. Set up the  environment for PCD onboarding by running the script setup-local.sh from inside pcd_ansible-pcd_develop directory
 
-       sudo bash script pcd_ansible-pcd_develop/setup-local.sh
+       sudo bash setup-local.sh
    
 #### Run the script:  
 
