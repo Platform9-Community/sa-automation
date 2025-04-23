@@ -62,14 +62,13 @@ def start_pcd_onboarding(csv_filename, ssh_user,portal, region, environment, url
     pcd_dir = os.path.join(current_dir, "pcd_ansible-pcd_develop")
     render_vars_yaml(current_dir, template_file, output_file, url, region, environment, hosts, logger)
     os.chdir(pcd_dir)
-    run_pcd_onboarding(portal, region, environment, url,output_file, logger)
+    run_pcd_onboarding(portal, region, environment, url,output_file, pcd_dir,logger)
 
-def run_pcd_onboarding(portal, region, environment, url,output_file, logger):
-    
+def run_pcd_onboarding(portal, region, environment, url,output_file, pcd_dir,logger):
+    os.chdir(pcd_dir)
     try:
         
         subprocess.run(["cp", "-f", output_file, "user_resource_examples/templates/host_onboard_data.yaml.j2"], check=True)
-
         subprocess.run([
             "./pcdExpress",
             "-portal", portal,
@@ -77,9 +76,10 @@ def run_pcd_onboarding(portal, region, environment, url,output_file, logger):
             "-env", environment,
             "-url", url,
             "-ostype", "ubuntu",
-            "-setup-environment", "no"
+            "--setup-environment", "yes"
         ], check=True)
 
+        print(portal ,region,environment,url)
         subprocess.run([
             "./pcdExpress",
             "-env-file", f"user_configs/{portal}/{region}/{portal}-{region}-{environment}-environment.yaml",
