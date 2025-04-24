@@ -1,3 +1,4 @@
+
 import os
 import sys
 import csv
@@ -33,7 +34,7 @@ def setup_logger(log_name="maas_logger", log_dir="deploy_logs", log_file="maas_d
 
     return logger
 
-def add_machines_from_csv(csv_file,maas_user,max_workers,cloud_init_template, logger):
+def add_machines_from_csv(csv_file,maas_user,max_workers,cloud_init_template,preserve_cloud_init, logger):
     try:
         with open(csv_file, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
@@ -46,7 +47,7 @@ def add_machines_from_csv(csv_file,maas_user,max_workers,cloud_init_template, lo
 
         # Deploy machines
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            executor.map(lambda args: configure_and_deploy(maas_user, *args, cloud_init_template,logger), results)
+            executor.map(lambda args: configure_and_deploy(maas_user, *args, cloud_init_template,preserve_cloud_init,logger), results)
         
         save_csv(csv_file,rows,logger)
 
@@ -66,6 +67,8 @@ def wait_for_status(maas_user, system_id, expected_status, hostname,logger, time
     while elapsed < timeout:
         status = get_machine_status(maas_user, system_id)
         logger.info(f"[{hostname}] Status: {status}")
+        if status == "Failed commissioning" or status == "Unknown":
+            return False
         if status == expected_status:
             return True
         time.sleep(interval)
@@ -117,14 +120,17 @@ def create_machine(maas_user, row,logger):
         logger.error(f"STDOUT: {e.stdout.strip()}")
         return hostname, None, row
 
-def configure_and_deploy(maas_user, hostname, system_id, row, cloud_init_template,logger):
+def configure_and_deploy(maas_user, hostname, system_id, row, cloud_init_template,preserve_cloud_init,logger):
     if not system_id:
         logger.warning(f"[{hostname}] Skipping: no system_id.")
         row["deployment_status"] = "System ID Missing Machine Was Not Created"
         return
 
     if wait_for_status(maas_user, system_id, "Ready", hostname,logger, 600, 30):
-        temp_cloud_init = f"/tmp/cloud-init-{hostname}.yaml"
+        current_dir = os.getcwd()
+        temp_cloud_init_dir = os.path.join(current_dir, "maas-cloud-init")
+        os.makedirs(temp_cloud_init_dir, exist_ok=True)
+        temp_cloud_init = f"{temp_cloud_init_dir}/cloud-init-{hostname}.yaml"
         generate_cloud_init(cloud_init_template, temp_cloud_init, row["ip"])
         try:
             deploy_command = f'maas {maas_user} machine deploy {system_id} user_data="$(base64 -w 0 {temp_cloud_init})"'
@@ -145,8 +151,8 @@ def configure_and_deploy(maas_user, hostname, system_id, row, cloud_init_templat
         else:
             logger.warning(f"[{hostname}] Did not reach Deployed state.")
             row["deployment_status"] = "Deployment Timeout"
-
-        os.remove(temp_cloud_init)
+        if preserve_cloud_init == "no" and os.path.exists(temp_cloud_init):
+            os.remove(temp_cloud_init)
     else:
         logger.warning(f"[{hostname}] Not Ready. Skipping deployment.")
         row["deployment_status"] = "Not Ready,Commissioning Was Not Done"

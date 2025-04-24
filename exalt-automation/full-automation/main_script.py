@@ -17,9 +17,9 @@ parser.add_argument("-portal", "--portal", required=True, help="Region name (REQ
 parser.add_argument("-region", "--region", required=True, help="Site name to form DU=<portal>-<region> (REQUIRED)")
 parser.add_argument("-environment", "--environment", required=True, help="Environment name to segregate hosts")
 parser.add_argument("-url", "--url", required=True, help="Portal URL for blueprint/hostconfigs/network resources")
-#parser.add_argument("-setup-environment", "--setup-environment", required=True, help="Set up Ansible environment: yes|no")
 parser.add_argument("-ssh_user", "--ssh_user", required=True, help="SSH user for Ansible")
 parser.add_argument("-max_workers", "--max_workers", required=True,type=int,help="Maximum number of concurrent threads for provisioning")
+parser.add_argument("--preserve_cloud_init",choices=["yes", "no"],default="no",help="Preserve cloud-init files created for each machine (yes or no, default: no)")
 args = parser.parse_args()
 
 
@@ -44,7 +44,14 @@ if not os.path.isdir("pcd_ansible-pcd_develop"):
 #                        Deploy MAAS machines from CSV                        #
 ###############################################################################
 logger.info("Starting deployment of baremetal nodes...")
-maasHelper.add_machines_from_csv(args.csv_filename,args.maas_user, args.max_workers,args.cloud_init_template,logger)
+maasHelper.add_machines_from_csv(
+    args.csv_filename,
+    args.maas_user,
+    args.max_workers,
+    args.cloud_init_template,
+    args.preserve_cloud_init,
+    logger
+)
 
 logger.info("Waiting 20 seconds for the machines and their interfaces to be up before starting onboarding...")
 time.sleep(20)
@@ -61,4 +68,3 @@ onboard.start_pcd_onboarding(
     url=args.url,
     logger=logger
 )
-
