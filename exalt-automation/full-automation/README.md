@@ -13,12 +13,11 @@
 ### How to use?
 
 Download the script and prerequisite files into the same directory.
-script directory structure:
+
+Script directory structure:
 ```bash
  .
  ├── cloud-init_tempalte.yaml
- ├── deploy_logs
- │   └── maas_deployment.log
  ├── machines_tempalte.csv
  ├── vars_template.j2
  ├── main_script.py
@@ -27,8 +26,6 @@ script directory structure:
  │   ├── onboard.py     ---> onboard machines to PCD
  ├── pcd_ansible-pcd_develop
  │   ├── .....
- │   ├── logs
- │   │   └── pcd_installer_logs
  │   ├── setup-local.sh ---> Set up the  environment for PCD onboarding
 ```
 
@@ -144,10 +141,31 @@ What the options mean:
 There is an optional argument
   - preserve_cloud_init: By default, it's no, but when set to yes, it will keep all generated cloud-init files under
     ```bash
-    /tmp/maas-cloud-init/cloud-init-{hostname}.yaml
+    /{script directory}/maas-cloud-init/cloud-init-{hostname}.yaml
     ```
 
-
+Script directory structure after running the script:
+```bash
+ .
+ ├── cloud-init_tempalte.yaml
+ ├── maas-cloud-init
+ │   └── cloud-init-{hostname}.yaml    ---> generated cloud-init files for each machine
+ ├── deploy_logs
+ │   └── maas_deployment.log           ---> generated logs for MAAS 
+ ├── machines_tempalte.csv
+ ├── {your CSV file name}_updated.csv  ---> updated csv with the status of the deployment
+ ├── vars_template.j2
+ ├── vars.yaml                         ---> yaml file that will be used by the onboarding Ansible playbooks
+ ├── main_script.py
+ ├── modules
+ │   ├── maasHelper.py  
+ │   ├── onboard.py     
+ ├── pcd_ansible-pcd_develop
+ │   ├── .....
+ │   ├── logs
+ │   │   └── pcd_installer_logs
+ │   ├── setup-local.sh 
+```
  
 #### Script Functionality: 
 
@@ -156,10 +174,14 @@ There is an optional argument
 ##### 2. Deploy the machines once the state is ready 
 When in ready state, it will generate a cloud-init file for each machine with the IP specified for each one from the CSV file,it will be generated in the tmp directory,and then deploy the OS.
 ```bash
-/tmp/maas-cloud-init/cloud-init-{hostname}.yaml
+/maas-cloud-init/cloud-init-{hostname}.yaml
 ```
 Those files will be deleted once the deployment is done, unless the flag preserve_cloud_init is set to yes
 ##### 3. After the deployment is done and successful, the onboarding process will begin. 
+After deployment, a new CSV file will be generated that contains all the previous info along with the deployment status to ensure that undeployed or uncommissioned machines don't go through the onboarding phase.
+```bash
+{your CSV file name}_updated.csv
+```
 ##### 4. Will start by generating a vars.yaml file, which contains all the necessary information about each host, using Jinja2 
   - Loads a template (vars_template.j2) and fills it with the extracted data. 
   - Saves the rendered YAML to vars.yaml.
