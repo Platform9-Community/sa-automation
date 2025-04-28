@@ -132,14 +132,14 @@ Script directory structure:
     --ssh_user ubuntu
 ```
 What the options mean:
-  - maas_user: MAAS admin username.
-  - csv_filename: CSV file path.
-  - cloud_init_template: Cloud-init template YAML path.
-  - max_workers: Maximum number of concurrent threads for provisioning.
-  - ssh_user: SSH user for Ansible.
+  - ```--maas_user```: MAAS admin username.
+  - ```--csv_filename```: CSV file path.
+  - ```--cloud_init_template```: Cloud-init template YAML path.
+  - ```--max_workers```: Maximum number of concurrent threads for provisioning.
+  - ```--ssh_user```: SSH user for Ansible.
   
 There is an optional argument
-  - preserve_cloud_init: By default, it's no, but when set to yes, it will keep all generated cloud-init files under
+  - ```--preserve_cloud_init```: By default, it's no, but when set to yes, it will keep all generated cloud-init files under
     ```bash
     /{script directory}/maas-cloud-init/cloud-init-{hostname}.yaml
     ```
