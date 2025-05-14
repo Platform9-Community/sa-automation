@@ -53,7 +53,7 @@ def render_vars_yaml(current_dir, template_file, output_file, url, region, envir
         logger.error(f"Error rendering vars.yaml: {e}")
         sys.exit(1)
 
-def start_pcd_onboarding(csv_filename, ssh_user,portal, region, environment, url, logger):
+def start_pcd_onboarding(csv_filename, ssh_user,portal, region, environment, url,setup_env, logger):
     current_dir = os.getcwd()
     output_file = os.path.join(current_dir, "vars.yaml")
     template_file = os.path.join(current_dir, "vars_template.j2")
@@ -62,9 +62,9 @@ def start_pcd_onboarding(csv_filename, ssh_user,portal, region, environment, url
     pcd_dir = os.path.join(current_dir, "pcd_ansible-pcd_develop")
     render_vars_yaml(current_dir, template_file, output_file, url, region, environment, hosts, logger)
     os.chdir(pcd_dir)
-    run_pcd_onboarding(portal, region, environment, url,output_file, logger)
+    run_pcd_onboarding(portal, region, environment, url,output_file,setup_env, logger)
 
-def run_pcd_onboarding(portal, region, environment, url,output_file, logger):
+def run_pcd_onboarding(portal, region, environment, url,output_file,setup_env, logger):
     
     try:
         
@@ -72,7 +72,7 @@ def run_pcd_onboarding(portal, region, environment, url,output_file, logger):
 
         subprocess.run([
             "./pcdExpress","-portal", portal,"-region", region,"-env", environment,"-url", url,"-ostype", "ubuntu",
-            "-setup-environment", "no"
+            "-setup-environment", setup_env
         ], check=True)
 
         subprocess.run([

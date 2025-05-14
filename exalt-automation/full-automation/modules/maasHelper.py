@@ -146,7 +146,7 @@ def configure_and_deploy(maas_user, hostname, system_id, row, cloud_init_templat
 
         if wait_for_status(maas_user, system_id, "Deployed", hostname,logger, 1200, 60):
             logger.info(f"[{hostname}] Deployment completed.")
-            update_ipmi_user(system_id, hostname, row)
+            update_ipmi_user(system_id, hostname,maas_user, row)
             row["deployment_status"] = "Deployed"
         else:
             logger.warning(f"[{hostname}] Did not reach Deployed state.")
@@ -157,13 +157,13 @@ def configure_and_deploy(maas_user, hostname, system_id, row, cloud_init_templat
         logger.warning(f"[{hostname}] Not Ready. Skipping deployment.")
         row["deployment_status"] = "Not Ready,Commissioning Was Not Done"
 
-def update_ipmi_user(system_id, hostname, row):
+def update_ipmi_user(system_id, hostname,maas_user, row):
     power_params = json.dumps({
         "power_user": row["power_user"],
         "power_pass": row["power_pass"]
     })
     update_command = [
-        "maas", "admin", "machine", "update", system_id,
+        "maas", maas_user, "machine", "update", system_id,
         f"power_parameters={power_params}"
     ]
     try:

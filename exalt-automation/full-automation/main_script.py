@@ -19,7 +19,8 @@ parser.add_argument("-environment", "--environment", required=True, help="Enviro
 parser.add_argument("-url", "--url", required=True, help="Portal URL for blueprint/hostconfigs/network resources")
 parser.add_argument("-ssh_user", "--ssh_user", required=True, help="SSH user for Ansible")
 parser.add_argument("-max_workers", "--max_workers", required=True,type=int,help="Maximum number of concurrent threads for provisioning")
-parser.add_argument("--preserve_cloud_init",choices=["yes", "no"],default="no",help="Preserve cloud-init files created for each machine (yes or no, default: no)")
+parser.add_argument("-preserve_cloud_init","--preserve_cloud_init",choices=["yes", "no"],default="no",help="Preserve cloud-init files created for each machine (yes or no, default: no)")
+parser.add_argument("-setup_env","--setup_env",choices=["yes", "no"],default="no",help="setup the environment for pcd onboarding script (yes or no, default: no)")
 args = parser.parse_args()
 
 
@@ -66,5 +67,6 @@ onboard.start_pcd_onboarding(
     region=args.region,
     environment=args.environment,
     url=args.url,
+    setup_env=args.setup_env,
     logger=logger
 )
