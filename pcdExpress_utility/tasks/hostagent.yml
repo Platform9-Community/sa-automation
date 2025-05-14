@@ -4,10 +4,10 @@
     path: /etc/pf9/host_id.conf
   register: host_id_conf
 - block:
-    - name: Set Cloud-ctl Config
+    - name: Set pcdctl Config
       become: true
       command: |-
-        cloud-ctl config set
+        pcdctl config set
         -u '{{ hostvars['localhost']['pcd_region_portal'] }}'
         -e '{{ hostvars['localhost']['cloud_username'] }}'
         -p '{{ hostvars['localhost']['cloud_password'] }}'
@@ -18,7 +18,7 @@
     - name: Prep Node
       become: true
       command: |-
-        cloud-ctl prep-node
+        pcdctl prep-node
         --skip-checks
         --no-prompt
         --verbose
