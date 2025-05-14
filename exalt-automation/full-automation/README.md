@@ -129,7 +129,8 @@ Script directory structure:
     --environment stage \
     --url https://exalt-pcd-jrs.app.qa-pcd.platform9.com/ \
     --max_workers 5 \
-    --ssh_user ubuntu
+    --ssh_user ubuntu \
+    --setup_env yes
 ```
 What the options mean:
   - ```--maas_user```: MAAS admin username.
@@ -137,8 +138,10 @@ What the options mean:
   - ```--cloud_init_template```: Cloud-init template YAML path.
   - ```--max_workers```: Maximum number of concurrent threads for provisioning.
   - ```--ssh_user```: SSH user for Ansible.
-  
-There is an optional argument
+  - ```--setup_env```: By default, it's no, but for the first run on the maas machine, it should be yes to set up the necessary directories
+
+    
+There is an optional argument:
   - ```--preserve_cloud_init```: By default, it's no, but when set to yes, it will keep all generated cloud-init files under
     ```bash
     /{script directory}/maas-cloud-init/cloud-init-{hostname}.yaml
