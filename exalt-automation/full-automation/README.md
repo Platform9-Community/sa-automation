@@ -113,6 +113,19 @@ Script directory structure:
                       nameservers:
                         addresses:
                           - 8.8.8.8
+                  vlans:
+                    vlan.301:  
+                      id: 301  
+                      link: bond0 
+                      addresses:  
+                        - $storage_ip/18     --> placeholder for the storage IP
+                      routes:  
+                        - to: default  
+                          via: 10.10.0.1  
+                      nameservers:  
+                        addresses:  
+                          - 8.8.8.8 
+                          - 1.1.1.1 
           ``` 
           
   6. Ensure the SSH key for the MAAS server user (used to connect to deployed machines during onboarding) is added in the MAAS UI.
