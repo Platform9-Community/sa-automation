@@ -76,10 +76,10 @@ def wait_for_status(maas_user, system_id, expected_status, hostname,logger, time
     logger.warning(f"[{hostname}] Timeout waiting for status: {expected_status}")
     return False
 
-def generate_cloud_init(template_file, output_file, ip):
+def generate_cloud_init(template_file, output_file, ip, storage_ip):
     with open(template_file, 'r') as f:
         template = Template(f.read())
-    rendered = template.safe_substitute(ip=ip)
+    rendered = template.safe_substitute(ip=ip, storage_ip=storage_ip)
     with open(output_file, 'w') as f:
         f.write(rendered)
 
@@ -131,7 +131,7 @@ def configure_and_deploy(maas_user, hostname, system_id, row, cloud_init_templat
         temp_cloud_init_dir = os.path.join(current_dir, "maas-cloud-init")
         os.makedirs(temp_cloud_init_dir, exist_ok=True)
         temp_cloud_init = f"{temp_cloud_init_dir}/cloud-init-{hostname}.yaml"
-        generate_cloud_init(cloud_init_template, temp_cloud_init, row["ip"])
+        generate_cloud_init(cloud_init_template, temp_cloud_init, row["IP"], row["storage_ip"])
         try:
             deploy_command = f'maas {maas_user} machine deploy {system_id} user_data="$(base64 -w 0 {temp_cloud_init})"'
             subprocess.run(deploy_command, shell=True, check=True, capture_output=True, text=True)
