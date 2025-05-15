@@ -70,9 +70,9 @@ Script directory structure:
 
        1. machines_template.csv
           ```bash
-          hostname,architecture,mac_addresses,power_type,power_user,power_pass,power_driver,power_address,cipher_suite_id,power_boot_type,privilege_level,k_g,ip
-          pf9-test001,amd64/generic,3c:fd:fe:b5:1a:8d,ipmi,admin,password,LAN_2_0,172.25.1.11,3,auto,ADMIN,,192.168.125.167
-          pf9-test002,amd64/generic,3c:fd:fe:b5:1a:8d,ipmi,admin,password,LAN_2_0,172.25.1.12,3,auto,ADMIN,,192.168.125.168
+          hostname,architecture,mac_addresses,power_type,power_user,power_pass,power_driver,power_address,cipher_suite_id,power_boot_type,privilege_level,k_g,IP,storage_ip
+          pf9-test001,amd64/generic,3c:fd:fe:b5:1a:8d,ipmi,admin,password,LAN_2_0,172.25.1.11,3,auto,ADMIN,,192.168.125.167,192.168.125.165
+          pf9-test002,amd64/generic,3c:fd:fe:b5:1a:8d,ipmi,admin,password,LAN_2_0,172.25.1.12,3,auto,ADMIN,,192.168.125.168,192.168.125.166
           ```
        3. cloud-init-template.yaml
           - The only requirement for this file is to have the IP as a placeholder to be filled in dynamically for each machine 
