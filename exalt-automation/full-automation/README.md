@@ -75,7 +75,7 @@ Script directory structure:
           pf9-test002,amd64/generic,3c:fd:fe:b5:1a:8d,ipmi,admin,password,LAN_2_0,172.25.1.12,3,auto,ADMIN,,192.168.125.168,192.168.125.166
           ```
        3. cloud-init-template.yaml
-          - The only requirement for this file is to have the IP as a placeholder to be filled in dynamically for each machine 
+          - The only requirement for this file is to have the IP and the storage_ip  as a placeholder to be filled in dynamically for each machine 
           ```bash
           #cloud-config
           write_files:
