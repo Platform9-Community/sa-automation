@@ -74,9 +74,9 @@ parser.add_argument("-role ", "--role", action='store', help="pass role name wit
 parser.add_argument("-state ", "--state", action='store', help="pass state info of play with -deauth-role argument. Values: absent|present", required=False)
 parser.add_argument("-ip ", "--ip", action='store', help="pass ip with -deauth-role argument. Values: string (OPTIONAL). env value will take precdence if not provided.", required=False)
 parser.add_argument("-onprem ", "--onprem", action='store', help="set onprem yes to enable on-prem specific options.", required=False)
-parser.add_argument("-ip-addr","--ip-addr", required=True, help="to be used with onprem option. The VIP IP address to add to /etc/hosts.")
-parser.add_argument("-fqdn","--fqdn", required=True, help="to be used with onprem option. Set the FQDN of the UI.")
-parser.add_argument("-fqdninfra","--fqdninfra", required=True, help="to be used with onprem option. Set The Infra FQDN of the UI.")
+parser.add_argument("-ip-addr","--ip-addr", required=False, help="to be used with onprem option. The VIP IP address to add to /etc/hosts.")
+parser.add_argument("-fqdn","--fqdn", required=False, help="to be used with onprem option. Set the FQDN of the UI.")
+parser.add_argument("-fqdninfra","--fqdninfra", required=False, help="to be used with onprem option. Set The Infra FQDN of the UI.")
 args = parser.parse_args()
 
 ###############################################################################
